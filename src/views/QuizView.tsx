@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState} from 'react';
+import React, { useState } from "react";
 
 import {
   Image,
@@ -8,13 +8,13 @@ import {
   View,
   TouchableOpacity,
   Modal,
-} from 'react-native';
+} from "react-native";
 import {
   DeuteranopiaQuizAnswerKey,
   ProtanopiaQuizAnswerKey,
   TritanopiaQuizAnswerKey,
   quizQuestion,
-} from '../data/quizData';
+} from "../data/quizData";
 
 const QuizView = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -53,22 +53,18 @@ const QuizView = () => {
   };
 
   const validateOption = (selectedOption: string) => {
-    console.log('here');
     let rightAnswer = questions[currentQuestionIndex];
 
     if (selectedOption !== rightAnswer.answer) {
       switch (rightAnswer.type) {
-        case 'Deuteranopia':
+        case "Deuteranopia":
           setIncorrectDeuteranopiaQuestions(incorrectDeuteranopiaQuestions + 1);
-          console.log('d');
           break;
-        case 'Protanopia':
+        case "Protanopia":
           setIncorrectProtanopiaQuestions(incorrectProtanopiaQuestions + 1);
-          console.log('p');
           break;
-        case 'Tritanopia':
+        case "Tritanopia":
           setIncorrectTritanopiaQuestions(incorrectTritanopiaQuestions + 1);
-          console.log('t');
           break;
         default:
           break;
@@ -82,17 +78,18 @@ const QuizView = () => {
       <View>
         <View
           style={{
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignItems: 'center',
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "center",
             padding: 10,
-          }}>
-          <Text style={{fontSize: 20}}>{currentQuestionIndex + 1}</Text>
-          <Text style={{fontSize: 20}}>/{questions.length}</Text>
+          }}
+        >
+          <Text style={{ fontSize: 20 }}>{currentQuestionIndex + 1}</Text>
+          <Text style={{ fontSize: 20 }}>/{questions.length}</Text>
         </View>
 
-        <View style={{justifyContent: 'center', alignItems: 'center'}}>
-          <Text style={{fontSize: 30}}>What number do you see?</Text>
+        <View style={{ justifyContent: "center", alignItems: "center" }}>
+          <Text style={{ fontSize: 30 }}>What number do you see?</Text>
           <Image source={questions[currentQuestionIndex].image} />
         </View>
       </View>
@@ -103,27 +100,29 @@ const QuizView = () => {
     return (
       <View
         style={{
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}>
-        {questions[currentQuestionIndex].options.map(option => (
+          flexDirection: "row",
+          flexWrap: "wrap",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        {questions[currentQuestionIndex].options.map((option) => (
           <TouchableOpacity
             key={option}
             style={{
-              justifyContent: 'center',
-              alignItems: 'center',
-              width: option === 'Not Sure' ? 150 : 50,
+              justifyContent: "center",
+              alignItems: "center",
+              width: option === "Not Sure" ? 150 : 50,
               borderWidth: 3,
-              borderColor: '#FFFFFF',
-              backgroundColor: '#724DC6',
+              borderColor: "#FFFFFF",
+              backgroundColor: "#724DC6",
               height: 50,
               borderRadius: 20,
               margin: 10,
             }}
-            onPress={() => validateOption(option)}>
-            <Text style={{fontSize: 30, color: '#FFFFFF'}}>{option}</Text>
+            onPress={() => validateOption(option)}
+          >
+            <Text style={{ fontSize: 30, color: "#FFFFFF" }}>{option}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -135,22 +134,25 @@ const QuizView = () => {
       <Modal
         animationType="slide"
         transparent={true}
-        visible={showDiagnosticModal}>
+        visible={showDiagnosticModal}
+      >
         <View
           style={{
             flex: 1,
-            backgroundColor: '#FFFFFF',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
+            backgroundColor: "#FFFFFF",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <View
             style={{
-              width: '90%',
+              width: "90%",
               borderRadius: 20,
               padding: 20,
-              alignItems: 'center',
-            }}>
-            <Text style={{fontSize: 30, fontWeight: 'bold'}}>
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: 30, fontWeight: "bold" }}>
               {dichromacyDiagnosis()}
             </Text>
 
@@ -158,14 +160,16 @@ const QuizView = () => {
               onPress={restartQuiz}
               style={{
                 padding: 20,
-                width: '100%',
+                width: "100%",
                 borderRadius: 20,
-              }}>
+              }}
+            >
               <Text
                 style={{
-                  textAlign: 'center',
+                  textAlign: "center",
                   fontSize: 20,
-                }}>
+                }}
+              >
                 Retry Quiz
               </Text>
             </TouchableOpacity>
@@ -180,19 +184,19 @@ const QuizView = () => {
       incorrectDeuteranopiaQuestions > incorrectProtanopiaQuestions &&
       incorrectDeuteranopiaQuestions > incorrectTritanopiaQuestions
     ) {
-      return 'Deuteranopia';
+      return "Deuteranopia";
     } else if (
       incorrectProtanopiaQuestions > incorrectDeuteranopiaQuestions &&
       incorrectProtanopiaQuestions > incorrectTritanopiaQuestions
     ) {
-      return 'Protanopia';
+      return "Protanopia";
     } else if (
       incorrectTritanopiaQuestions > incorrectDeuteranopiaQuestions &&
       incorrectTritanopiaQuestions > incorrectProtanopiaQuestions
     ) {
-      return 'Tritanopia';
+      return "Tritanopia";
     } else {
-      return 'Multiple Deficiencies Detected';
+      return "Multiple Deficiencies Detected";
     }
   };
 
