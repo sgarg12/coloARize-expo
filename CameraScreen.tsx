@@ -24,6 +24,10 @@ in vec2 uv;
 out vec4 fragColor;
 
 vec3 simColourBlind(int simType, vec3 rgb, float severity) {
+  if (simType < 1 || simType > 3) {
+    return rgb;
+  }
+
   float one_minus_severity = (abs(severity - 1.0f) <= 1e-5f) ? 0.0f : 1.0f - severity;
 
   mat3 xyz_from_rgb = mat3(
@@ -76,7 +80,7 @@ vec3 simColourBlind(int simType, vec3 rgb, float severity) {
     break;
   }
 
-  simMatrix =  rgb_from_xyz * xyz_from_lms * simMatrix;
+  simMatrix = rgb_from_xyz * xyz_from_lms * simMatrix;
 
   return simMatrix * rgb;
 }
@@ -199,7 +203,7 @@ vec3 remapColour(vec3 rgb, float hue_shift, float phi) {
 
 void main() {
   vec3 rgb = texture(cameraTexture, uv).rgb;
-  
+
   // required in parameters
   float hue_shift = 10.0;
   float phi = 0.5;
@@ -215,8 +219,6 @@ void main() {
   vec3 fixed_rgb = remapColour(rgb, hue_shift, phi);
 
   fragColor = vec4(simColourBlind(simType, fixed_rgb, severity), 1.0);
-  // fragColor = vec4(simColourBlind(simType, rgb, severity), 1.0);
-  // fragColor = vec4(fixed_rgb, 1.0);
 }`;
 
 interface State {
