@@ -8,7 +8,7 @@ export type SimulationParams = {
 
 export type DefaultParams = {
   HueShift: number;
-  Severity: number;
+  Phi: number;
 };
 
 export type Configuration = {
