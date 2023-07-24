@@ -1,8 +1,9 @@
-import {Camera, CameraType} from 'expo-camera';
-import * as GL from 'expo-gl';
-import {GLView} from 'expo-gl';
-import React from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import { Camera, CameraType } from "expo-camera";
+import * as GL from "expo-gl";
+import { GLView } from "expo-gl";
+import React, { useEffect, useState } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Configuration } from "../redux/types";
 
 const vertShaderSource = `#version 300 es
 precision highp float;
@@ -220,45 +221,42 @@ void main() {
   fragColor = vec4(simColourBlind(simType, fixed_rgb, severity), 1.0);
 }`;
 
-
-interface State {
-  zoom: number;
-  type: any;
-}
+type CameraProps = {
+  // using `interface` is also ok
+  configuration: Configuration;
+};
 
 // See: https://github.com/expo/expo/pull/10229#discussion_r490961694
 // eslint-disable-next-line @typescript-eslint/ban-types
-class CameraView extends React.Component<{}, State> {
-  static title = 'Expo.Camera integration';
+const CameraView = (props: CameraProps) => {
+  const title = "Expo.Camera integration";
 
-  readonly state: State = {
-    zoom: 0,
-    type: CameraType.back,
-  };
+  const [zoom, setZoom] = useState(0);
+  const [type, setType] = useState(CameraType.back);
 
-  _rafID?: number;
-  camera?: Camera;
-  glView?: GL.GLView;
-  texture?: WebGLTexture;
+  var _rafID: number = 0;
+  var camera: Camera;
+  var glView: GL.GLView;
+  var texture: WebGLTexture;
 
-  componentWillUnmount() {
-    if (this._rafID !== undefined) {
-      cancelAnimationFrame(this._rafID);
+  useEffect(() => {
+    if (_rafID !== undefined) {
+      cancelAnimationFrame(_rafID);
     }
-  }
+  }, [_rafID]);
 
-  async createCameraTexture(): Promise<WebGLTexture> {
+  async function createCameraTexture(): Promise<WebGLTexture> {
     const cameraPermission = await Camera.requestCameraPermissionsAsync();
     if (!cameraPermission.granted) {
-      throw new Error('Denied camera permissions!');
+      throw new Error("Denied camera permissions!");
     }
-    return this.glView!.createCameraTextureAsync(this.camera!);
+    return glView!.createCameraTextureAsync(camera!);
   }
 
-  onContextCreate = async (gl: GL.ExpoWebGLRenderingContext) => {
+  const onContextCreate = async (gl: GL.ExpoWebGLRenderingContext) => {
     // Create texture asynchronously
-    this.texture = await this.createCameraTexture();
-    const cameraTexture = this.texture;
+    texture = await createCameraTexture();
+    const cameraTexture = texture;
 
     // Compile vertex and fragment shaders
     const vertShader = gl.createShader(gl.VERTEX_SHADER)!;
@@ -278,7 +276,7 @@ class CameraView extends React.Component<{}, State> {
 
     gl.useProgram(program);
 
-    const positionAttrib = gl.getAttribLocation(program, 'position');
+    const positionAttrib = gl.getAttribLocation(program, "position");
     gl.enableVertexAttribArray(positionAttrib);
 
     // Create, bind, fill buffer
@@ -291,14 +289,14 @@ class CameraView extends React.Component<{}, State> {
     gl.vertexAttribPointer(positionAttrib, 2, gl.FLOAT, false, 0, 0);
 
     // Set 'cameraTexture' uniform
-    gl.uniform1i(gl.getUniformLocation(program, 'cameraTexture'), 0);
+    gl.uniform1i(gl.getUniformLocation(program, "cameraTexture"), 0);
 
     // Activate unit 0
     gl.activeTexture(gl.TEXTURE0);
 
     // Render loop
     const loop = () => {
-      this._rafID = requestAnimationFrame(loop);
+      _rafID = requestAnimationFrame(loop);
 
       // Clear
       gl.clearColor(0, 0, 1, 1);
@@ -317,59 +315,50 @@ class CameraView extends React.Component<{}, State> {
     loop();
   };
 
-  toggleFacing = () => {
-    this.setState(state => ({
-      type: state.type === CameraType.back ? CameraType.front : CameraType.back,
-    }));
+  const toggleFacing = () => {
+    setType(type === CameraType.back ? CameraType.front : CameraType.back);
   };
 
-  zoomOut = () => {
-    this.setState(state => ({
-      zoom: state.zoom - 0.1 < 0 ? 0 : state.zoom - 0.1,
-    }));
+  const zoomOut = () => {
+    setZoom(zoom - 0.1 < 0 ? 0 : zoom - 0.1);
   };
 
-  zoomIn = () => {
-    this.setState(state => ({
-      zoom: state.zoom + 0.1 > 1 ? 1 : state.zoom + 0.1,
-    }));
+  const zoomIn = () => {
+    setZoom(zoom + 0.1 > 1 ? 1 : zoom + 0.1);
   };
 
-  render() {
-    return (
-      <View style={styles.container}>
-        <Camera
-          style={StyleSheet.absoluteFill}
-          type={this.state.type}
-          zoom={this.state.zoom}
-          ref={ref => (this.camera = ref!)}
-        />
-        <GLView
-          style={StyleSheet.absoluteFill}
-          onContextCreate={this.onContextCreate}
-          ref={ref => (this.glView = ref!)}
-        />
-
-        <View style={styles.buttons}>
-          <TouchableOpacity style={styles.button} onPress={this.toggleFacing}>
-            <Text>Flip</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={this.zoomIn}>
-            <Text>Zoom in</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={this.zoomOut}>
-            <Text>Zoom out</Text>
-          </TouchableOpacity>
-        </View>
+  return (
+    <View style={styles.container}>
+      <Camera
+        style={StyleSheet.absoluteFill}
+        type={type}
+        zoom={zoom}
+        ref={(ref) => (camera = ref!)}
+      />
+      <GLView
+        style={StyleSheet.absoluteFill}
+        onContextCreate={onContextCreate}
+        ref={(ref) => (glView = ref!)}
+      />
+      <View style={styles.buttons}>
+        <TouchableOpacity style={styles.button} onPress={toggleFacing}>
+          <Text>Flip</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={zoomIn}>
+          <Text>Zoom in</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={zoomOut}>
+          <Text>Zoom out</Text>
+        </TouchableOpacity>
       </View>
-    );
-  }
-}
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: 'column',
+    flexDirection: "column",
   },
   camera: {
     ...StyleSheet.absoluteFillObject,
@@ -377,19 +366,19 @@ const styles = StyleSheet.create({
   buttons: {
     flex: 1,
     paddingHorizontal: 10,
-    backgroundColor: 'transparent',
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-around',
+    backgroundColor: "transparent",
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-around",
   },
   button: {
     flex: 1,
     height: 40,
     margin: 10,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 
