@@ -1,36 +1,40 @@
 import {
-  ADD_DICHROMACY_CONFIGURATION,
   Actions,
   AddDichromacyConfigurationAction,
   DeleteDichromacyConfigurationAction,
   EditDichromacyConfigurationAction,
 } from "./actionTypes";
-import { ConfigurationList } from "./types";
+import { ConfigurationState } from "./types";
 
-export const initialState: ConfigurationList = [];
+export const initialState: ConfigurationState = {
+  configurations: [],
+};
 
 export const reducer = (
-  state: ConfigurationList = initialState,
+  state: ConfigurationState = initialState,
   action: Actions
 ) => {
   switch (action.type) {
     case "ADD_DICHROMACY_CONFIGURATION":
       var addAction = action as AddDichromacyConfigurationAction;
-      return [...state, addAction.payload];
+      return {
+        ...state,
+        configurations: state.configurations.concat(addAction.payload),
+      };
     case "EDIT_DICHROMACY_CONFIGURATION":
       var editAction = action as EditDichromacyConfigurationAction;
-      var index = state.findIndex(
+      var index = state.configurations.findIndex(
         (config) => (config.Name = editAction.payload.oldName)
       );
-      if (index != -1) state[index] = editAction.payload.config;
+      if (index != -1) state.configurations[index] = editAction.payload.config;
       return state;
 
     case "DELETE_DICHROMACY_CONFIGURATION":
       var deleteAction = action as DeleteDichromacyConfigurationAction;
-      var newState = state.filter(
+      var newState = state.configurations.filter(
         (config) => config.Name != deleteAction.payload.Name
       );
-      return newState;
+      return { ...state, configurations: newState };
     default:
       return state;
   }

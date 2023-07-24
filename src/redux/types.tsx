@@ -19,3 +19,7 @@ export type Configuration = {
 };
 
 export type ConfigurationList = Configuration[];
+
+export type ConfigurationState = {
+  configurations: ConfigurationList;
+};

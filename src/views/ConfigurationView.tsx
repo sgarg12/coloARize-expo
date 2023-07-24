@@ -19,7 +19,11 @@ import {
 import ColorButton from "../components/button";
 import { useSelector, useDispatch } from "react-redux";
 import { addDichromacyConfiguration } from "../redux/actions";
-import { DichromacyType } from "../redux/types";
+import {
+  ConfigurationList,
+  ConfigurationState,
+  DichromacyType,
+} from "../redux/types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Config">;
 
@@ -54,7 +58,7 @@ const renderImages = (image: ImageSourcePropType) => {
   //   })
   // );
 
-  // console.log(useSelector((state) => state));
+  // console.log(useSelector((state: ConfigurationState) => state.configurations));
 
   return (
     <View style={styles.view_images}>
