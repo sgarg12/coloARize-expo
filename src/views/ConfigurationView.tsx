@@ -22,7 +22,11 @@ import {
 } from "../data/quizData";
 import ColorButton from "../components/button";
 import { useSelector, useDispatch } from "react-redux";
-import { addDichromacyConfiguration } from "../redux/actions";
+import {
+    addDichromacyConfiguration,
+    deleteDichromacyConfiguration,
+    editDichromacyConfiguration,
+} from "../redux/actions";
 import {
     Configuration,
     ConfigurationList,
@@ -203,13 +207,18 @@ const renderActions = (
         undefined
     >,
     config: Configuration,
-    old_name: String | null
+    old_name: string | null
 ) => {
+    const dispatch = useDispatch();
+
     if (old_name == null) {
         return (
             <View>
                 <ColorButton
-                    onPress={() => navigation.navigate("PastConfigs")}
+                    onPress={() => {
+                        dispatch(addDichromacyConfiguration(config));
+                        navigation.navigate("PastConfigs");
+                    }}
                     title="Create"
                     color={"#FFFFFF"}
                     backgroundColour={"#724DC6"}
@@ -227,6 +236,7 @@ const renderActions = (
             <View style={style.buttons}>
                 <ColorButton
                     onPress={() => {
+                        dispatch(editDichromacyConfiguration(config, old_name));
                         navigation.navigate("PastConfigs");
                     }}
                     title="Save"
@@ -234,7 +244,10 @@ const renderActions = (
                     backgroundColour={"#724DC6"}
                 />
                 <ColorButton
-                    onPress={() => navigation.navigate("PastConfigs")}
+                    onPress={() => {
+                        dispatch(deleteDichromacyConfiguration(old_name));
+                        navigation.navigate("PastConfigs");
+                    }}
                     title="Delete"
                     color={"#FFFFFF"}
                     backgroundColour={"#FF6B6B"}
