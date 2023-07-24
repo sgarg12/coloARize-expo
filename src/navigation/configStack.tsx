@@ -1,16 +1,17 @@
-import React from 'react';
+import React from "react";
 import {
   createNativeStackNavigator,
   NativeStackNavigationOptions,
-} from '@react-navigation/native-stack';
-import PastConfigsView from '../views/PastConfigsView';
-import DichromacySelectionView from '../views/DichromacySelectionView';
-import ConfigurationView from '../views/ConfigurationView';
+} from "@react-navigation/native-stack";
+import PastConfigsView from "../views/PastConfigsView";
+import DichromacySelectionView from "../views/DichromacySelectionView";
+import ConfigurationView from "../views/ConfigurationView";
+import { DichromacyType } from "../redux/types";
 
 export type RootStackParamList = {
   PastConfigs: undefined;
   DichromacySelection: undefined;
-  Config: {type: 'Deuteranopia' | 'Protanopia' | 'Tritanopia'};
+  Config: { type: DichromacyType };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -19,24 +20,24 @@ export default function ConfigStack() {
   return (
     <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen
-        name={'PastConfigs'}
+        name={"PastConfigs"}
         component={PastConfigsView}
         options={{
-          title: 'Saved Configs',
+          title: "Saved Configs",
         }}
       />
       <Stack.Screen
-        name={'DichromacySelection'}
+        name={"DichromacySelection"}
         component={DichromacySelectionView}
         options={{
-          title: 'Create New Config',
+          title: "Create New Config",
         }}
       />
       <Stack.Screen
-        name={'Config'}
+        name={"Config"}
         component={ConfigurationView}
         options={{
-          title: 'Adjust Config',
+          title: "Adjust Config",
         }}
       />
     </Stack.Navigator>
@@ -46,11 +47,11 @@ export default function ConfigStack() {
 const screenOptions: NativeStackNavigationOptions = {
   headerShown: true,
   headerStyle: {
-    backgroundColor: '#6C2CFF',
+    backgroundColor: "#6C2CFF",
     // backgroundColor: '#ff0000',
   },
-  headerTitleAlign: 'center',
+  headerTitleAlign: "center",
   headerTitleStyle: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
   },
 };

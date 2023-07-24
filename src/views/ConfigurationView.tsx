@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from "react";
 import {
   StyleSheet,
   Button,
@@ -6,48 +6,65 @@ import {
   Image,
   View,
   ImageSourcePropType,
-} from 'react-native';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {RootStackParamList} from '../navigation/configStack';
-import Slider from '@react-native-community/slider';
+} from "react-native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../navigation/configStack";
+import Slider from "@react-native-community/slider";
 import {
   DeuteranopiaQuizAnswerKey,
   ProtanopiaQuizAnswerKey,
   TritanopiaQuizAnswerKey,
   quizQuestion,
-} from '../data/quizData';
-import ColorButton from '../components/button';
+} from "../data/quizData";
+import ColorButton from "../components/button";
+import { useSelector, useDispatch } from "react-redux";
+import { addDichromacyConfiguration } from "../redux/actions";
+import { DichromacyType } from "../redux/types";
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Config'>;
-
-type ColorBlindnessType = 'Deuteranopia' | 'Protanopia' | 'Tritanopia';
+type Props = NativeStackScreenProps<RootStackParamList, "Config">;
 
 const renderImages = (image: ImageSourcePropType) => {
   const styles = StyleSheet.create({
     view_images: {
       // color: '#FFFFFF',
       // backgroundColor: '#724DC6',
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "space-around",
+      alignItems: "center",
       // marginVertical: 0,
     },
     image: {
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
+      flexDirection: "column",
+      justifyContent: "center",
+      alignItems: "center",
     },
   });
+
+  // const dispatch = useDispatch();
+
+  // dispatch(
+  //   addDichromacyConfiguration({
+  //     Name: "test",
+  //     DichromacyType: "Tritanopia",
+  //     AlgorithmType: "Default",
+  //     Parameters: {
+  //       Severity: 1,
+  //       HueShift: 1,
+  //     },
+  //   })
+  // );
+
+  // console.log(useSelector((state) => state));
 
   return (
     <View style={styles.view_images}>
       <View style={styles.image}>
         <Image source={image} />
-        <Text style={{marginVertical: 5}}> Original Image </Text>
+        <Text style={{ marginVertical: 5 }}> Original Image </Text>
       </View>
       <View style={styles.image}>
         <Image source={image} />
-        <Text style={{marginVertical: 5}}> Remapped Image </Text>
+        <Text style={{ marginVertical: 5 }}> Remapped Image </Text>
       </View>
     </View>
   );
@@ -64,7 +81,7 @@ const renderInputs = () => {
         minimumValue={0.0}
         maximumValue={1.0}
         value={severity}
-        onValueChange={slideValue => {
+        onValueChange={(slideValue) => {
           set_severity(slideValue);
         }}
         minimumTrackTintColor="#C6ADFF"
@@ -79,7 +96,7 @@ const renderInputs = () => {
         minimumValue={0.0}
         maximumValue={1.0}
         value={value}
-        onValueChange={slideValue => {
+        onValueChange={(slideValue) => {
           set_value(slideValue);
         }}
         minimumTrackTintColor="#C6ADFF"
@@ -90,16 +107,16 @@ const renderInputs = () => {
   );
 };
 
-const get_image = (type: ColorBlindnessType) => {
-  if (type == 'Protanopia') {
+const get_image = (type: DichromacyType) => {
+  if (type == "Protanopia") {
     return ProtanopiaQuizAnswerKey[0].image;
-  } else if (type == 'Deuteranopia') {
+  } else if (type == "Deuteranopia") {
     return DeuteranopiaQuizAnswerKey[0].image;
   } else {
     return TritanopiaQuizAnswerKey[0].image;
   }
 };
-const ConfigurationView = ({route, navigation}: Props) => {
+const ConfigurationView = ({ route, navigation }: Props) => {
   const params = route.params;
   const image = get_image(params.type);
 
@@ -107,9 +124,9 @@ const ConfigurationView = ({route, navigation}: Props) => {
     text_header: {
       fontSize: 20,
       lineHeight: 21,
-      fontWeight: 'bold',
+      fontWeight: "bold",
       letterSpacing: 0.25,
-      textAlign: 'center',
+      textAlign: "center",
       marginTop: 10,
     },
   });
@@ -120,10 +137,10 @@ const ConfigurationView = ({route, navigation}: Props) => {
       {renderImages(image)}
       {renderInputs()}
       <ColorButton
-        onPress={() => navigation.navigate('PastConfigs')}
+        onPress={() => navigation.navigate("PastConfigs")}
         title="Create"
-        color={'#FFFFFF'}
-        backgroundColour={'#724DC6'}
+        color={"#FFFFFF"}
+        backgroundColour={"#724DC6"}
       />
     </>
   );

@@ -1,14 +1,15 @@
-import React from 'react';
-import {Button, StyleSheet, Text} from 'react-native';
-import {RootStackParamList} from '../navigation/configStack';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import ColorButton from '../components/button';
+import React from "react";
+import { Button, StyleSheet, Text } from "react-native";
+import { RootStackParamList } from "../navigation/configStack";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import ColorButton from "../components/button";
+import { DichromacyType } from "../redux/types";
 
-type Props = NativeStackScreenProps<RootStackParamList, 'DichromacySelection'>;
+type Props = NativeStackScreenProps<RootStackParamList, "DichromacySelection">;
 
-const DichromacySelectionView = ({navigation}: Props) => {
-  const goToScreen = (type: 'Deuteranopia' | 'Protanopia' | 'Tritanopia') => {
-    navigation.navigate('Config', {
+const DichromacySelectionView = ({ navigation }: Props) => {
+  const goToScreen = (type: DichromacyType) => {
+    navigation.navigate("Config", {
       type: type,
     });
   };
@@ -17,22 +18,22 @@ const DichromacySelectionView = ({navigation}: Props) => {
     <>
       <Text style={styles.text}>Select type of dichromacy</Text>
       <ColorButton
-        onPress={() => goToScreen('Protanopia')}
+        onPress={() => goToScreen("Protanopia")}
         title="Protanopia"
-        color={'#FFFFFF'}
-        backgroundColour={'#724DC6'}
+        color={"#FFFFFF"}
+        backgroundColour={"#724DC6"}
       />
       <ColorButton
-        onPress={() => goToScreen('Deuteranopia')}
+        onPress={() => goToScreen("Deuteranopia")}
         title="Deuteranopia"
-        color={'#FFFFFF'}
-        backgroundColour={'#724DC6'}
+        color={"#FFFFFF"}
+        backgroundColour={"#724DC6"}
       />
       <ColorButton
-        onPress={() => goToScreen('Tritanopia')}
+        onPress={() => goToScreen("Tritanopia")}
         title="Tritanopia"
-        color={'#FFFFFF'}
-        backgroundColour={'#724DC6'}
+        color={"#FFFFFF"}
+        backgroundColour={"#724DC6"}
       />
     </>
     //Other components
@@ -44,14 +45,14 @@ export default DichromacySelectionView;
 const styles = StyleSheet.create({
   text: {
     fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
     paddingTop: 20,
     paddingBottom: 20,
   },
 
   button: {
-    color: '#FFFFFF',
-    backgroundColor: '#724DC6',
+    color: "#FFFFFF",
+    backgroundColor: "#724DC6",
   },
 });

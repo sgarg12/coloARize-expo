@@ -1,6 +1,7 @@
 import {
   ADD_DICHROMACY_CONFIGURATION,
   Actions,
+  AddDichromacyConfigurationAction,
   DeleteDichromacyConfigurationAction,
   EditDichromacyConfigurationAction,
 } from "./actionTypes";
@@ -14,7 +15,8 @@ export const reducer = (
 ) => {
   switch (action.type) {
     case "ADD_DICHROMACY_CONFIGURATION":
-      return [...state, action.payload];
+      var addAction = action as AddDichromacyConfigurationAction;
+      return [...state, addAction.payload];
     case "EDIT_DICHROMACY_CONFIGURATION":
       var editAction = action as EditDichromacyConfigurationAction;
       var index = state.findIndex(
