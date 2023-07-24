@@ -26,9 +26,17 @@ const QuizView = () => {
     useState(0);
   const [showDiagnosticModal, setShowDiagnosticModal] = useState(false);
 
-  const deuteranopiaQuestions = DeuteranopiaQuizAnswerKey;
-  const protanopiaQuestions = ProtanopiaQuizAnswerKey;
-  const tritanopiaQuestions = TritanopiaQuizAnswerKey;
+  const shuffle = (array: quizQuestion[]) => {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  };
+
+  const deuteranopiaQuestions = shuffle(DeuteranopiaQuizAnswerKey);
+  const protanopiaQuestions = shuffle(ProtanopiaQuizAnswerKey);
+  const tritanopiaQuestions = shuffle(TritanopiaQuizAnswerKey);
 
   const getQuestions = () => {
     var questions = [];
@@ -42,7 +50,7 @@ const QuizView = () => {
     return questions;
   };
 
-  var questions: quizQuestion[] = getQuestions();
+  var questions: quizQuestion[] = shuffle(getQuestions());
 
   const handleNext = () => {
     if (currentQuestionIndex === questions.length - 1) {
@@ -195,6 +203,12 @@ const QuizView = () => {
       incorrectTritanopiaQuestions > incorrectProtanopiaQuestions
     ) {
       return "Tritanopia";
+    } else if (
+      incorrectDeuteranopiaQuestions == 0 &&
+      incorrectProtanopiaQuestions == 0 &&
+      incorrectTritanopiaQuestions == 0
+    ) {
+      return "No Colour Deficiencies Detected";
     } else {
       return "Multiple Deficiencies Detected";
     }
