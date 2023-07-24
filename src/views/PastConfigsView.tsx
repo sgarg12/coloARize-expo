@@ -10,8 +10,18 @@ import {
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/configStack";
 import ColorButton from "../components/button";
-import { Configuration } from "../redux/types";
+import {
+    Configuration,
+    ConfigurationList,
+    ConfigurationState,
+} from "../redux/types";
 import { ConfigItem } from "@babel/core";
+import { useDispatch } from "react-redux";
+import {
+    addDichromacyConfiguration,
+    deleteDichromacyConfiguration,
+} from "../redux/actions";
+import { useSelector } from "react-redux";
 
 type Props = NativeStackScreenProps<RootStackParamList, "PastConfigs">;
 
@@ -70,6 +80,7 @@ const get_config_component = (
                     on_press(config);
                 }
             }}
+            // key={config.Name}
         >
             <Image source={icon} style={styles.icon} />
             <Text style={styles.config_name}>{config.Name}</Text>
@@ -87,25 +98,38 @@ const get_config_component = (
 const get_config_components = (
     on_press?: (config: Configuration) => void | undefined
 ) => {
-    let configs: Configuration[] = [
-        {
-            Name: "config_protan",
-            DichromacyType: "Protanopia",
-            AlgorithmType: "Default",
-            Parameters: {
-                HueShift: 0.5,
-                Phi: 0.7,
-            },
-        },
-        {
-            Name: "config_simulate_deutan",
-            DichromacyType: "Deuteranopia",
-            AlgorithmType: "Simulation",
-            Parameters: {
-                Severity: 0.8,
-            },
-        },
-    ];
+    // let configs: ConfigurationList = [
+    //     {
+    //         Name: "config_protan",
+    //         DichromacyType: "Protanopia",
+    //         AlgorithmType: "Default",
+    //         Parameters: {
+    //             HueShift: 0.5,
+    //             Phi: 0.7,
+    //         },
+    //     },
+    //     {
+    //         Name: "config_simulate_deutan",
+    //         DichromacyType: "Deuteranopia",
+    //         AlgorithmType: "Simulation",
+    //         Parameters: {
+    //             Severity: 0.8,
+    //         },
+    //     },
+    // ];
+
+    // {
+    //     const dispatch = useDispatch();
+    //     console.log("Rishi dispatching");
+    //     dispatch(deleteDichromacyConfiguration(configs[0]));
+    //     dispatch(deleteDichromacyConfiguration(configs[1]));
+    //     dispatch(addDichromacyConfiguration(configs[0]));
+    //     dispatch(addDichromacyConfiguration(configs[1]));
+    // }
+
+    let configs: ConfigurationList = useSelector(
+        (state: ConfigurationState) => state.configurations
+    );
 
     let components = [];
 
@@ -122,7 +146,6 @@ const PastConfigsView = ({ navigation }: Props) => {
     };
 
     let fields = get_config_components((config: Configuration) => {
-        console.log("Rishi_2");
         navigation.navigate("Config", {
             dichromacy_type: config.DichromacyType,
             algorithm_type: config.AlgorithmType,
@@ -131,7 +154,6 @@ const PastConfigsView = ({ navigation }: Props) => {
     });
     return (
         <>
-            {/* <Text>Past Configurations</Text> */}
             <ColorButton
                 onPress={() => goToScreen()}
                 title="New Config"

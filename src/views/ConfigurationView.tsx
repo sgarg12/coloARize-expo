@@ -51,7 +51,7 @@ const renderImages = (image: ImageSourcePropType, label_2: String) => {
         },
     });
 
-    const dispatch = useDispatch();
+    // const dispatch = useDispatch();
 
     // dispatch(
     //     addDichromacyConfiguration({
@@ -228,8 +228,6 @@ const renderActions = (
                 <ColorButton
                     onPress={() => {
                         navigation.navigate("PastConfigs");
-                        console.log("Saving new config: ");
-                        console.log(config);
                     }}
                     title="Save"
                     color={"#FFFFFF"}
@@ -264,7 +262,14 @@ const create_new_config = (
     const default_new_name = "config_" + (config_len + 1).toString();
 
     if (old_config != null) {
-        return old_config;
+        return {
+            Name: old_config.Name,
+            DichromacyType: old_config.DichromacyType,
+            AlgorithmType: old_config.AlgorithmType,
+            Parameters: {
+                ...old_config.Parameters,
+            },
+        };
     }
 
     let new_params: SimulationParams | DefaultParams;
@@ -296,9 +301,6 @@ const ConfigurationView = ({ route, navigation }: Props) => {
         rparams.dichromacy_type,
         rparams.config
     );
-
-    console.log("Initializing new config: ");
-    console.log(new_config);
 
     const styles = StyleSheet.create({
         text_header: {
