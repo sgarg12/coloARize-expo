@@ -23,8 +23,200 @@ uniform sampler2D cameraTexture;
 in vec2 uv;
 out vec4 fragColor;
 
+vec3 simColourBlind(int simType, vec3 rgb, float severity) {
+  float one_minus_severity = (abs(severity - 1.0f) <= 1e-5f) ? 0.0f : 1.0f - severity;
+
+  mat3 xyz_from_rgb = mat3(
+    40.9568 / 100.0, 21.3389 / 100.0, 1.86297 / 100.0,
+    35.5041 / 100.0, 70.6743 / 100.0,  11.462 / 100.0,
+    17.9167 / 100.0,  7.9868 / 100.0, 91.2367 / 100.0
+  );
+
+  mat3 rgb_from_xyz = inverse(xyz_from_rgb);
+
+  mat3 lms_from_xyz = mat3(
+     0.15514, -0.15514,     0.0,
+     0.54312,  0.45684,     0.0,
+    -0.03286,  0.03286, 0.01608
+  );
+
+  mat3 xyz_from_lms = inverse(lms_from_xyz);
+
+  mat3 protan = mat3(
+         one_minus_severity, 0.0, 0.0,
+     severity * 2.02344377f, 1.0, 0.0,
+    severity * -2.52580405f, 0.0, 1.0
+  );
+
+  mat3 deutan = mat3(
+    1.0, severity * 0.49420696f, 0.0,
+    0.0,     one_minus_severity, 0.0,
+    0.0, severity * 1.24826995f, 1.0
+  );
+
+  mat3 tritan = mat3(
+    1.0, 0.0, severity * -0.01224491f,
+    0.0, 1.0,  severity * 0.07203435f,
+    0.0, 0.0,      one_minus_severity
+  );
+
+  mat3 simMatrix = lms_from_xyz * xyz_from_rgb;
+
+  switch(simType) {
+  case 1:
+    simMatrix = protan * simMatrix;
+    break;
+  case 2:
+    simMatrix = deutan * simMatrix;
+    break;
+  case 3:
+    simMatrix = tritan * simMatrix;
+    break;
+  default:
+    break;
+  }
+
+  simMatrix =  rgb_from_xyz * xyz_from_lms * simMatrix;
+
+  return simMatrix * rgb;
+}
+
+vec3 rgb_to_hsv(vec3 rgb) {
+  vec3 hsv;
+  float min, max, delta;
+
+  min = rgb[0] < rgb[1] ? rgb[0] : rgb[1];
+  min = min < rgb[2] ? min : rgb[2];
+
+  max = rgb[0] > rgb[1] ? rgb[0] : rgb[1];
+  max = max > rgb[2] ? max : rgb[2];
+
+  hsv[2] = max; // v
+  delta = max - min;
+  if (delta < 0.00001) {
+    hsv[1] = 0.0;
+    hsv[0] = 0.0; // undefined, maybe nan?
+    return hsv;
+  }
+  if (max > 0.0) { // NOTE: if Max is == 0, this divide would cause a crash
+    hsv[1] = (delta / max); // s
+  } else {
+    // if max is 0, then r = g = b = 0
+    // s = 0, h is undefined
+    hsv[1] = 0.0;
+    hsv[0] = 1.0 / 0.0; // its now undefined
+    return hsv;
+  }
+  if (rgb[0] >= max) // > is bogus, just keeps compilor happy
+    hsv[0] = (rgb[1] - rgb[2]) / delta; // between yellow & magenta
+  else if (rgb[1] >= max)
+    hsv[0] = 2.0 + (rgb[2] - rgb[0]) / delta; // between cyan & yellow
+  else
+    hsv[0] = 4.0 + (rgb[0] - rgb[1]) / delta; // between magenta & cyan
+
+  hsv[0] *= 60.0; // degrees
+
+  if (hsv[0] < 0.0)
+    hsv[0] += 360.0;
+
+  return hsv;
+}
+
+vec3 hsv_to_rgb(vec3 hsv) {
+  float hh, p, q, t, ff;
+  int i;
+  vec3 rgb;
+
+  if (hsv[1] <= 0.0) { // < is bogus, just shuts up warnings
+    rgb[0] = hsv[2];
+    rgb[1] = hsv[2];
+    rgb[2] = hsv[2];
+    return rgb;
+  }
+  hh = hsv[0];
+  if (hh >= 360.0)
+    hh = 0.0;
+  hh /= 60.0;
+  i = int(hh);
+  ff = hh - float(i);
+  p = hsv[2] * (1.0 - hsv[1]);
+  q = hsv[2] * (1.0 - (hsv[1] * ff));
+  t = hsv[2] * (1.0 - (hsv[1] * (1.0 - ff)));
+
+  switch (i) {
+  case 0:
+    rgb[0] = hsv[2];
+    rgb[1] = t;
+    rgb[2] = p;
+    break;
+  case 1:
+    rgb[0] = q;
+    rgb[1] = hsv[2];
+    rgb[2] = p;
+    break;
+  case 2:
+    rgb[0] = p;
+    rgb[1] = hsv[2];
+    rgb[2] = t;
+    break;
+  case 3:
+    rgb[0] = p;
+    rgb[1] = q;
+    rgb[2] = hsv[2];
+    break;
+  case 4:
+    rgb[0] = t;
+    rgb[1] = p;
+    rgb[2] = hsv[2];
+    break;
+  case 5:
+  default:
+    rgb[0] = hsv[2];
+    rgb[1] = p;
+    rgb[2] = q;
+    break;
+  }
+
+  return rgb;
+}
+
+vec3 remapColour(vec3 rgb, float hue_shift, float phi) {
+  vec3 hsv = rgb_to_hsv(rgb);
+  float new_hue = hsv[0] / 360.0;
+
+  // // remap hue
+  new_hue = new_hue + hue_shift / 360.0;
+  new_hue = new_hue - floor(new_hue);
+  new_hue = pow(new_hue, phi);
+  new_hue = new_hue + 1.0f - hue_shift / 360.0;
+  new_hue = new_hue - floor(new_hue);
+
+  hsv[0] = new_hue * 360.0f;
+  vec3 fixed_rgb = hsv_to_rgb(hsv);
+
+  return fixed_rgb;
+}
+
 void main() {
-  fragColor = vec4(1.0 - texture(cameraTexture, uv).rgb, 1.0);
+  vec3 rgb = texture(cameraTexture, uv).rgb;
+  
+  // required in parameters
+  float hue_shift = 10.0;
+  float phi = 0.5;
+  float severity = 0.9;
+  int simType = 1;
+
+  // other possible in parameters
+  float hue_min = 0.0;
+  float hue_max = 150.0;
+  float phi_min = 0.3;
+  float phi_max = 0.9;
+
+  vec3 fixed_rgb = remapColour(rgb, hue_shift, phi);
+
+  fragColor = vec4(simColourBlind(simType, fixed_rgb, severity), 1.0);
+  // fragColor = vec4(simColourBlind(simType, rgb, severity), 1.0);
+  // fragColor = vec4(fixed_rgb, 1.0);
 }`;
 
 interface State {
