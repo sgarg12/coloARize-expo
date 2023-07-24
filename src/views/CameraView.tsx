@@ -4,6 +4,8 @@ import { GLView } from "expo-gl";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Configuration } from "../redux/types";
+import { CameraStackParamList } from "../navigation/cameraStack";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 const vertShaderSource = `#version 300 es
 precision highp float;
@@ -221,14 +223,11 @@ void main() {
   fragColor = vec4(simColourBlind(simType, fixed_rgb, severity), 1.0);
 }`;
 
-type CameraProps = {
-  // using `interface` is also ok
-  configuration: Configuration;
-};
+type Props = NativeStackScreenProps<CameraStackParamList, "Camera">;
 
 // See: https://github.com/expo/expo/pull/10229#discussion_r490961694
 // eslint-disable-next-line @typescript-eslint/ban-types
-const CameraView = (props: CameraProps) => {
+const CameraView = ({ route, navigation }: Props) => {
   const title = "Expo.Camera integration";
 
   const [zoom, setZoom] = useState(0);

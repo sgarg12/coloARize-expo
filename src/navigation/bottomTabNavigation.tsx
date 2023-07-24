@@ -1,74 +1,77 @@
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import HomeView from '../views/HomeView';
-import React from 'react';
-import QuizView from '../views/QuizView';
-import CameraView from '../views/CameraView';
-import ConfigStack from './configStack';
-import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome';
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import HomeView from "../views/HomeView";
+import React from "react";
+import QuizView from "../views/QuizView";
+import CameraView from "../views/CameraView";
+import ConfigStack from "./configStack";
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import {
   faHouse,
   faClipboardQuestion,
   faCamera,
   faGear,
-} from '@fortawesome/free-solid-svg-icons';
+} from "@fortawesome/free-solid-svg-icons";
+import CameraStack from "./cameraStack";
 
 const Tab = createBottomTabNavigator();
 
 export const BottomTabNav = () => {
   return (
     <Tab.Navigator
-      initialRouteName={'Home'}
+      initialRouteName={"Home"}
       screenOptions={{
-        tabBarActiveTintColor: '#FFFFFF',
+        tabBarActiveTintColor: "#FFFFFF",
         tabBarStyle: {
-          backgroundColor: '#6C2CFF',
+          backgroundColor: "#6C2CFF",
         },
         headerStyle: {
-          backgroundColor: '#6C2CFF',
+          backgroundColor: "#6C2CFF",
         },
-        headerTitleAlign: 'center',
+        headerTitleAlign: "center",
         headerTitleStyle: {
-          color: '#FFFFFF',
+          color: "#FFFFFF",
         },
-        tabBarActiveBackgroundColor: '#C6ADFF',
-      }}>
+        tabBarActiveBackgroundColor: "#C6ADFF",
+      }}
+    >
       <Tab.Screen
-        name={'Quiz'}
+        name={"Quiz"}
         component={QuizView}
         options={{
-          tabBarLabel: 'Quiz',
+          tabBarLabel: "Quiz",
           tabBarIcon: () => (
-            <FontAwesomeIcon icon={faClipboardQuestion} color={'#FFFFFF'} />
+            <FontAwesomeIcon icon={faClipboardQuestion} color={"#FFFFFF"} />
           ),
         }}
       />
       <Tab.Screen
-        name={'Home'}
+        name={"Home"}
         component={HomeView}
         options={{
-          tabBarLabel: 'Home',
+          tabBarLabel: "Home",
           tabBarIcon: () => (
-            <FontAwesomeIcon icon={faHouse} color={'#FFFFFF'} />
+            <FontAwesomeIcon icon={faHouse} color={"#FFFFFF"} />
           ),
         }}
       />
       <Tab.Screen
-        name={'Camera'}
-        component={CameraView}
+        name={"CameraStack"}
+        component={CameraStack}
         options={{
-          tabBarLabel: 'Camera',
+          headerShown: false,
+          tabBarLabel: "Camera",
           tabBarIcon: () => (
-            <FontAwesomeIcon icon={faCamera} color={'#FFFFFF'} />
+            <FontAwesomeIcon icon={faCamera} color={"#FFFFFF"} />
           ),
         }}
       />
       <Tab.Screen
-        name={'Configuration'}
+        name={"Configuration"}
         component={ConfigStack}
         options={{
           headerShown: false,
-          tabBarLabel: 'Config',
-          tabBarIcon: () => <FontAwesomeIcon icon={faGear} color={'#FFFFFF'} />,
+          tabBarLabel: "Config",
+          tabBarIcon: () => <FontAwesomeIcon icon={faGear} color={"#FFFFFF"} />,
         }}
       />
     </Tab.Navigator>
