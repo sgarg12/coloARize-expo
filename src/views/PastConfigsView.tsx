@@ -11,10 +11,14 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/configStack";
 import ColorButton from "../components/button";
 import { Configuration } from "../redux/types";
+import { ConfigItem } from "@babel/core";
 
 type Props = NativeStackScreenProps<RootStackParamList, "PastConfigs">;
 
-const get_config_component = (config: Configuration) => {
+const get_config_component = (
+    config: Configuration,
+    on_press?: (config: Configuration) => void | undefined
+) => {
     const icon = require("../assets/icon_eye.png");
     const styles = StyleSheet.create({
         config: {
@@ -62,7 +66,9 @@ const get_config_component = (config: Configuration) => {
         <TouchableOpacity
             style={styles.config}
             onPress={() => {
-                console.log("Rishi Test");
+                if (on_press != undefined) {
+                    on_press(config);
+                }
             }}
         >
             <Image source={icon} style={styles.icon} />
@@ -78,7 +84,9 @@ const get_config_component = (config: Configuration) => {
         </TouchableOpacity>
     );
 };
-const get_config_components = () => {
+const get_config_components = (
+    on_press?: (config: Configuration) => void | undefined
+) => {
     let configs: Configuration[] = [
         {
             Name: "config_protan",
@@ -102,7 +110,7 @@ const get_config_components = () => {
     let components = [];
 
     for (let i = 0; i < configs.length; i++) {
-        components.push(get_config_component(configs[i]));
+        components.push(get_config_component(configs[i], on_press));
     }
     // components.push(<Text>Test 1</Text>);
     // components.push(<Text>Test 2</Text>);
@@ -113,7 +121,14 @@ const PastConfigsView = ({ navigation }: Props) => {
         navigation.navigate("DichromacySelection");
     };
 
-    let fields = get_config_components();
+    let fields = get_config_components((config: Configuration) => {
+        console.log("Rishi_2");
+        navigation.navigate("Config", {
+            dichromacy_type: config.DichromacyType,
+            algorithm_type: config.AlgorithmType,
+            config: config,
+        });
+    });
     return (
         <>
             {/* <Text>Past Configurations</Text> */}
