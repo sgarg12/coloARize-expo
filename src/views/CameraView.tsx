@@ -3,9 +3,13 @@ import * as GL from "expo-gl";
 import { GLView } from "expo-gl";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Configuration } from "../redux/types";
+import { SimulationParams, DefaultParams } from "../redux/types";
 import { CameraStackParamList } from "../navigation/cameraStack";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import Slider from '@react-native-community/slider';
+import { Float } from "react-native/Libraries/Types/CodegenTypes";
+import { useDispatch } from "react-redux";
+import { editDichromacyConfiguration } from "../redux/actions";
 
 const vertShaderSource = `#version 300 es
 precision highp float;
@@ -22,6 +26,9 @@ const fragShaderSource = `#version 300 es
 precision highp float;
 
 uniform sampler2D cameraTexture;
+uniform float hue_shift;
+uniform float phi;
+uniform int simType;
 in vec2 uv;
 out vec4 fragColor;
 
@@ -206,11 +213,7 @@ vec3 remapColour(vec3 rgb, float hue_shift, float phi) {
 void main() {
   vec3 rgb = texture(cameraTexture, uv).rgb;
 
-  // required in parameters
-  float hue_shift = 10.0;
-  float phi = 0.5;
   float severity = 0.9;
-  int simType = 1;
 
   // other possible in parameters
   float hue_min = 0.0;
@@ -230,13 +233,13 @@ type Props = NativeStackScreenProps<CameraStackParamList, "Camera">;
 const CameraView = ({ route, navigation }: Props) => {
   const title = "Expo.Camera integration";
 
-  const [zoom, setZoom] = useState(0);
   const [type, setType] = useState(CameraType.back);
 
   var _rafID: number = 0;
   var camera: Camera;
   var glView: GL.GLView;
   var texture: WebGLTexture;
+  var phi2 = isSimParams(route.params.Parameters) ? 0.0 : route.params.Parameters.Phi;
 
   useEffect(() => {
     if (_rafID !== undefined) {
@@ -250,6 +253,10 @@ const CameraView = ({ route, navigation }: Props) => {
       throw new Error("Denied camera permissions!");
     }
     return glView!.createCameraTextureAsync(camera!);
+  }
+
+  function isSimParams(param: SimulationParams | DefaultParams): param is SimulationParams {
+    return (param as SimulationParams).Severity !== undefined;
   }
 
   const onContextCreate = async (gl: GL.ExpoWebGLRenderingContext) => {
@@ -290,6 +297,24 @@ const CameraView = ({ route, navigation }: Props) => {
     // Set 'cameraTexture' uniform
     gl.uniform1i(gl.getUniformLocation(program, "cameraTexture"), 0);
 
+    const param  = route.params.Parameters;
+    var simType: number;
+    var hue_shift: Float;
+
+    if(isSimParams(param)) {
+      simType = param.Severity; //is this right, I'm still kinda confused should I be using dichromacy type to assign this, but then it would always be non zero I think
+      hue_shift = 10.0;
+    } else {
+      hue_shift = param.HueShift;
+      simType = 0;
+    }
+
+    gl.useProgram(program);
+    gl.uniform1i(gl.getUniformLocation(program, 'simType'),  simType);
+
+    gl.useProgram(program);
+    gl.uniform1f(gl.getUniformLocation(program, 'hue_shift'), hue_shift);
+
     // Activate unit 0
     gl.activeTexture(gl.TEXTURE0);
 
@@ -301,6 +326,9 @@ const CameraView = ({ route, navigation }: Props) => {
       gl.clearColor(0, 0, 1, 1);
       // tslint:disable-next-line: no-bitwise
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      gl.useProgram(program);
+      gl.uniform1f(gl.getUniformLocation(program, 'phi'), phi2);
 
       // Bind texture if created
       gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
@@ -318,12 +346,21 @@ const CameraView = ({ route, navigation }: Props) => {
     setType(type === CameraType.back ? CameraType.front : CameraType.back);
   };
 
-  const zoomOut = () => {
-    setZoom(zoom - 0.1 < 0 ? 0 : zoom - 0.1);
-  };
+  const dispatch = useDispatch();
 
-  const zoomIn = () => {
-    setZoom(zoom + 0.1 > 1 ? 1 : zoom + 0.1);
+  const changePhi = (val: number) => {
+   phi2 = val;
+   dispatch(
+    editDichromacyConfiguration({
+      Name: route.params.Name,
+      DichromacyType: route.params.DichromacyType,
+      AlgorithmType: route.params.AlgorithmType,
+      Parameters: {
+        Phi: val,
+        HueShift: (route.params.Parameters as DefaultParams).HueShift,
+      },
+    })
+  );
   };
 
   return (
@@ -331,7 +368,6 @@ const CameraView = ({ route, navigation }: Props) => {
       <Camera
         style={StyleSheet.absoluteFill}
         type={type}
-        zoom={zoom}
         ref={(ref) => (camera = ref!)}
       />
       <GLView
@@ -343,12 +379,19 @@ const CameraView = ({ route, navigation }: Props) => {
         <TouchableOpacity style={styles.button} onPress={toggleFacing}>
           <Text>Flip</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={zoomIn}>
-          <Text>Zoom in</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={zoomOut}>
-          <Text>Zoom out</Text>
-        </TouchableOpacity>
+        <Slider
+            style={{width: 200, height: 40}}
+            step={0.01}
+            minimumValue={0.1}
+            maximumValue={1.0}
+            value={phi2}
+            onValueChange={(slideValue) => {
+              changePhi(slideValue);
+            }}
+            minimumTrackTintColor="#C6ADFF"
+            maximumTrackTintColor="#d3d3d3"
+            thumbTintColor="#C6ADFF"
+          />
       </View>
     </View>
   );

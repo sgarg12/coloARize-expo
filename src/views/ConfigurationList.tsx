@@ -11,7 +11,7 @@ const ConfigListView = ({ navigation }: Props) => {
       Name: "test",
       DichromacyType: "Deuteranopia",
       AlgorithmType: "Default",
-      Parameters: { Severity: 1, HueShift: 1 },
+      Parameters: { Phi: 0.45, HueShift: 1 },
     });
   };
 
