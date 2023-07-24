@@ -1,34 +1,26 @@
 import {
-  ADD_COLOUR_MAPPING,
   ADD_DICHROMACY_CONFIGURATION,
-  ADD_DICHROMACY_TYPE,
-  AddColourMappingAction,
   AddDichromacyConfigurationAction,
-  AddDichromacyTypeAction,
-} from './actionTypes';
-import {Colour, DichromacyConfigurationState, DichromacyType} from './types';
-
-export const addColourMapping = (
-  oldRGB: Colour,
-  newRGB: Colour,
-): AddColourMappingAction => ({
-  type: ADD_COLOUR_MAPPING,
-  mapping: {
-    originalColourRGB: oldRGB,
-    newColourRGB: newRGB,
-  },
-});
-
-export const addDichromacyType = (
-  dichromacyType: DichromacyType,
-): AddDichromacyTypeAction => ({
-  type: ADD_DICHROMACY_TYPE,
-  dichromacyType,
-});
+} from "./actionTypes";
+import { Configuration, DichromacyType } from "./types";
 
 export const addDichromacyConfiguration = (
-  config: DichromacyConfigurationState,
+  config: Configuration
 ): AddDichromacyConfigurationAction => ({
-  type: ADD_DICHROMACY_CONFIGURATION,
-  config,
+  type: "ADD_DICHROMACY_CONFIGURATION",
+  payload: config,
+});
+
+export const editDichromacyConfiguration = (
+  config: Configuration
+): AddDichromacyConfigurationAction => ({
+  type: "EDIT_DICHROMACY_CONFIGURATION",
+  payload: config,
+});
+
+export const deleteDichromacyConfiguration = (
+  config: Configuration
+): AddDichromacyConfigurationAction => ({
+  type: "DELETE_DICHROMACY_CONFIGURATION",
+  payload: config,
 });

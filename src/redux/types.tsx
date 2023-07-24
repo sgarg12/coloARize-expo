@@ -1,19 +1,21 @@
-export type Colour = {
-  r: number;
-  g: number;
-  b: number;
+export type DichromacyType = "Protanopia" | "Deuteranopia" | "Tritanopia";
+
+export type AlgorithmType = "Simulation" | "Default";
+
+export type SimulationParams = {
+  Severity: number;
 };
 
-export type ColourMapping = {
-  originalColourRGB: Colour;
-  newColourRGB: Colour;
+export type DefaultParams = {
+  HueShift: number;
+  Severity: number;
 };
 
-export type DichromacyType = 'Protanopia' | 'Deuteranopia' | 'Tritanopia';
-
-export type ColourMappingList = ColourMapping[];
-
-export type DichromacyConfigurationState = {
-  type: DichromacyType | '';
-  mapping: ColourMappingList | [];
+export type Configuration = {
+  Name: string;
+  DichromacyType: DichromacyType;
+  AlgorithmType: AlgorithmType;
+  Parameters: SimulationParams | DefaultParams;
 };
+
+export type ConfigurationList = Configuration[];
