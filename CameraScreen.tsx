@@ -1,9 +1,12 @@
+import Slider from '@react-native-community/slider';
 import { Camera, CameraType } from 'expo-camera';
 import * as GL from 'expo-gl';
 import { GLView } from 'expo-gl';
 import * as Permissions from 'expo-permissions';
-import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Float } from 'react-native/Libraries/Types/CodegenTypes';
+import React, { useState } from "react";
+
 
 const vertShaderSource = `#version 300 es
 precision highp float;
@@ -20,6 +23,9 @@ const fragShaderSource = `#version 300 es
 precision highp float;
 
 uniform sampler2D cameraTexture;
+uniform float hue_shift;
+uniform float phi;
+uniform int simType;
 in vec2 uv;
 out vec4 fragColor;
 
@@ -204,11 +210,7 @@ vec3 remapColour(vec3 rgb, float hue_shift, float phi) {
 void main() {
   vec3 rgb = texture(cameraTexture, uv).rgb;
 
-  // required in parameters
-  float hue_shift = 10.0;
-  float phi = 0.5;
   float severity = 0.9;
-  int simType = 1;
 
   // other possible in parameters
   float hue_min = 0.0;
@@ -221,19 +223,24 @@ void main() {
   fragColor = vec4(simColourBlind(simType, fixed_rgb, severity), 1.0);
 }`;
 
+
 interface State {
-  zoom: number;
   type: any;
+  hue_shift: Float;
+  simType: number;
+  phi: Float;
 }
 
 // See: https://github.com/expo/expo/pull/10229#discussion_r490961694
 // eslint-disable-next-line @typescript-eslint/ban-types
-class CameraScreen extends React.Component<{}, State> {
+class CameraView extends React.Component<{}, State> {
   static title = 'Expo.Camera integration';
 
   readonly state: State = {
-    zoom: 0,
-    type: CameraType.back,
+      type: CameraType.back,
+      hue_shift: 10.0,
+      simType: 0,
+      phi: 0.45
   };
 
   _rafID?: number;
@@ -248,12 +255,10 @@ class CameraScreen extends React.Component<{}, State> {
   }
 
   async createCameraTexture(): Promise<WebGLTexture> {
-    const { status } = await Permissions.askAsync(Permissions.CAMERA);
-
-    if (status !== 'granted') {
+    const cameraPermission = await Camera.requestCameraPermissionsAsync();
+    if (!cameraPermission.granted) {
       throw new Error('Denied camera permissions!');
     }
-
     return this.glView!.createCameraTextureAsync(this.camera!);
   }
 
@@ -295,6 +300,12 @@ class CameraScreen extends React.Component<{}, State> {
     // Set 'cameraTexture' uniform
     gl.uniform1i(gl.getUniformLocation(program, 'cameraTexture'), 0);
 
+    gl.useProgram(program);
+    gl.uniform1i(gl.getUniformLocation(program, 'simType'), this.state.simType);
+
+    gl.useProgram(program);
+    gl.uniform1f(gl.getUniformLocation(program, 'hue_shift'), this.state.hue_shift);
+
     // Activate unit 0
     gl.activeTexture(gl.TEXTURE0);
 
@@ -306,6 +317,10 @@ class CameraScreen extends React.Component<{}, State> {
       gl.clearColor(0, 0, 1, 1);
       // tslint:disable-next-line: no-bitwise
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      gl.useProgram(program);
+      gl.uniform1f(gl.getUniformLocation(program, 'phi'), this.state.phi);
+
 
       // Bind texture if created
       gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
@@ -325,15 +340,9 @@ class CameraScreen extends React.Component<{}, State> {
     }));
   };
 
-  zoomOut = () => {
+  changePhi = (val: number) => {
     this.setState((state) => ({
-      zoom: state.zoom - 0.1 < 0 ? 0 : state.zoom - 0.1,
-    }));
-  };
-
-  zoomIn = () => {
-    this.setState((state) => ({
-      zoom: state.zoom + 0.1 > 1 ? 1 : state.zoom + 0.1,
+      phi: val,
     }));
   };
 
@@ -343,7 +352,6 @@ class CameraScreen extends React.Component<{}, State> {
         <Camera
           style={StyleSheet.absoluteFill}
           type={this.state.type}
-          zoom={this.state.zoom}
           ref={(ref) => (this.camera = ref!)}
         />
         <GLView
@@ -356,12 +364,19 @@ class CameraScreen extends React.Component<{}, State> {
           <TouchableOpacity style={styles.button} onPress={this.toggleFacing}>
             <Text>Flip</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={this.zoomIn}>
-            <Text>Zoom in</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={this.zoomOut}>
-            <Text>Zoom out</Text>
-          </TouchableOpacity>
+          <Slider
+            style={{width: 200, height: 40}}
+            step={0.01}
+            minimumValue={0.1}
+            maximumValue={1.0}
+            value={this.state.phi}
+            onValueChange={(slideValue) => {
+              this.changePhi(slideValue);
+            }}
+            minimumTrackTintColor="#C6ADFF"
+            maximumTrackTintColor="#d3d3d3"
+            thumbTintColor="#C6ADFF"
+          />
         </View>
       </View>
     );
@@ -395,4 +410,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CameraScreen;
+export default CameraView;
