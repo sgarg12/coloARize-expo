@@ -3,7 +3,7 @@ import * as GL from "expo-gl";
 import { GLView } from "expo-gl";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { SimulationParams, DefaultParams } from "../redux/types";
+import { DefaultConfig, SimulatorConfig, SimulatorRemapConfig, Configuration } from "../redux/types";
 import { CameraStackParamList } from "../navigation/cameraStack";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import Slider from "@react-native-community/slider";
@@ -29,6 +29,7 @@ uniform sampler2D cameraTexture;
 uniform float hue_shift;
 uniform float phi;
 uniform int simType;
+uniform float severity;
 in vec2 uv;
 out vec4 fragColor;
 
@@ -213,8 +214,6 @@ vec3 remapColour(vec3 rgb, float hue_shift, float phi) {
 void main() {
   vec3 rgb = texture(cameraTexture, uv).rgb;
 
-  float severity = 0.9;
-
   // other possible in parameters
   float hue_min = 0.0;
   float hue_max = 150.0;
@@ -239,7 +238,10 @@ const CameraView = ({ route, navigation }: Props) => {
   var camera: Camera;
   var glView: GL.GLView;
   var texture: WebGLTexture;
-  var phi2 = isSimParams(route.params) ? 0.0 : route.params.Phi;
+  var phi: Float =  1.0;
+  var hue: Float = 0.0;
+  var simType: number = 0;
+  var severity: Float = 0.9;
 
   useEffect(() => {
     if (_rafID !== undefined) {
@@ -255,10 +257,38 @@ const CameraView = ({ route, navigation }: Props) => {
     return glView!.createCameraTextureAsync(camera!);
   }
 
-  function isSimParams(
-    param: SimulationParams | DefaultParams
-  ): param is SimulationParams {
-    return (param as SimulationParams).Severity !== undefined;
+  function initParams() {
+    const { AlgorithmType } = route.params;
+      if (AlgorithmType === 'Default') {
+       const config = route.params as DefaultConfig;
+       phi = config.Phi;
+       hue = config.HueShift;
+       simType = 0;
+      } else if (AlgorithmType === 'Simulation') {
+        const config = route.params as SimulatorConfig;
+        phi = 1.0;
+        hue = 0;
+        severity = config.Severity;
+        if (config.DichromacyType === 'Deuteranopia') {
+          simType = 2;
+        } else if (config.DichromacyType === 'Protanopia') {
+          simType = 1;
+        } else {
+          simType = 3;
+        }
+      } else {
+        const config = route.params as SimulatorRemapConfig;
+        phi = config.Phi;
+        hue = config.HueShift;
+        severity = config.Severity;
+        if (config.DichromacyType === 'Deuteranopia') {
+          simType = 2;
+        } else if (config.DichromacyType === 'Protanopia') {
+          simType = 1;
+        } else {
+          simType = 3;
+        }
+      }
   }
 
   const onContextCreate = async (gl: GL.ExpoWebGLRenderingContext) => {
@@ -299,23 +329,16 @@ const CameraView = ({ route, navigation }: Props) => {
     // Set 'cameraTexture' uniform
     gl.uniform1i(gl.getUniformLocation(program, "cameraTexture"), 0);
 
-    const param = route.params;
-    var simType: number;
-    var hue_shift: Float;
-
-    if (isSimParams(param)) {
-      simType = param.Severity; //is this right, I'm still kinda confused should I be using dichromacy type to assign this, but then it would always be non zero I think
-      hue_shift = 10.0;
-    } else {
-      hue_shift = param.HueShift;
-      simType = 0;
-    }
+    initParams();
 
     gl.useProgram(program);
     gl.uniform1i(gl.getUniformLocation(program, "simType"), simType);
 
     gl.useProgram(program);
-    gl.uniform1f(gl.getUniformLocation(program, "hue_shift"), hue_shift);
+    gl.uniform1f(gl.getUniformLocation(program, "hue_shift"), hue);
+
+    gl.useProgram(program);
+    gl.uniform1f(gl.getUniformLocation(program, "severity"), severity);
 
     // Activate unit 0
     gl.activeTexture(gl.TEXTURE0);
@@ -330,7 +353,7 @@ const CameraView = ({ route, navigation }: Props) => {
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
       gl.useProgram(program);
-      gl.uniform1f(gl.getUniformLocation(program, "phi"), phi2);
+      gl.uniform1f(gl.getUniformLocation(program, "phi"), phi);
 
       // Bind texture if created
       gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
@@ -351,18 +374,21 @@ const CameraView = ({ route, navigation }: Props) => {
   const dispatch = useDispatch();
 
   const changePhi = (val: number) => {
-    phi2 = val;
-    if (route.params.AlgorithmType !== "Simulation") {
+    phi = val;
+    var obj: Configuration;
+    if (route.params.AlgorithmType === 'Default') {
+      obj = route.params as DefaultConfig;
+      obj.Phi = val;
+    } else {
+      obj = route.params as SimulatorRemapConfig;
+      obj.Phi = val;
+    }
       dispatch(
         editDichromacyConfiguration(
-          {
-            ...route.params,
-            Phi: val,
-          },
+          obj,
           route.params.Name
         )
       );
-    }
   };
 
   return (
@@ -381,12 +407,14 @@ const CameraView = ({ route, navigation }: Props) => {
         <TouchableOpacity style={styles.button} onPress={toggleFacing}>
           <Text>Flip</Text>
         </TouchableOpacity>
-        <Slider
+        {
+          route.params.AlgorithmType != 'Simulation' &&
+          <Slider
           style={{ width: 200, height: 40 }}
           step={0.01}
           minimumValue={0.1}
           maximumValue={1.0}
-          value={phi2}
+          value={route.params.Phi}
           onValueChange={(slideValue) => {
             changePhi(slideValue);
           }}
@@ -394,6 +422,7 @@ const CameraView = ({ route, navigation }: Props) => {
           maximumTrackTintColor="#d3d3d3"
           thumbTintColor="#C6ADFF"
         />
+        }
       </View>
     </View>
   );
