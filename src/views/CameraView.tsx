@@ -15,7 +15,6 @@ import Slider from "@react-native-community/slider";
 import { Float } from "react-native/Libraries/Types/CodegenTypes";
 import { useDispatch } from "react-redux";
 import { editDichromacyConfiguration } from "../redux/actions";
-import { create_new_config } from "./ConfigurationView";
 
 const vertShaderSource = `#version 300 es
 precision highp float;
@@ -238,15 +237,6 @@ type Props = NativeStackScreenProps<CameraStackParamList, "Camera">;
 const CameraView = ({ route, navigation }: Props) => {
   const title = "Expo.Camera integration";
 
-  const [type, setType] = useState(CameraType.back);
-  const [newConfig, setNewConfig] = useState<Configuration>(
-    create_new_config(
-      route.params.AlgorithmType,
-      route.params.DichromacyType,
-      route.params
-    )
-  );
-
   var _rafID: number = 0;
   var camera: Camera;
   var glView: GL.GLView;
@@ -367,7 +357,6 @@ const CameraView = ({ route, navigation }: Props) => {
 
       gl.useProgram(program);
       gl.uniform1f(gl.getUniformLocation(program, "phi"), phi);
-
       // Bind texture if created
       gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
 
@@ -380,31 +369,23 @@ const CameraView = ({ route, navigation }: Props) => {
     loop();
   };
 
-  const toggleFacing = () => {
-    setType(type === CameraType.back ? CameraType.front : CameraType.back);
-  };
-
   const dispatch = useDispatch();
 
   const saveConfig = () => {
-    dispatch(editDichromacyConfiguration(newConfig, route.params.Name));
-  };
-
-  const changePhi = (val: number) => {
-    phi = val;
-
+    var obj: Configuration;
     if (route.params.AlgorithmType === "Default") {
-      setNewConfig({ ...(route.params as DefaultConfig), Phi: val });
+      obj = { ...(route.params as DefaultConfig), Phi: phi };
     } else {
-      setNewConfig({ ...(route.params as SimulatorRemapConfig), Phi: val });
+      obj = { ...(route.params as SimulatorRemapConfig), Phi: phi };
     }
+    dispatch(editDichromacyConfiguration(obj, route.params.Name));
   };
 
   return (
     <View style={styles.container}>
       <Camera
         style={StyleSheet.absoluteFill}
-        type={type}
+        type={CameraType.back}
         ref={(ref) => (camera = ref!)}
       />
       <GLView
@@ -424,7 +405,7 @@ const CameraView = ({ route, navigation }: Props) => {
             maximumValue={1.0}
             value={route.params.Phi}
             onValueChange={(slideValue) => {
-              changePhi(slideValue);
+              phi = slideValue;
             }}
             minimumTrackTintColor="#C6ADFF"
             maximumTrackTintColor="#d3d3d3"
