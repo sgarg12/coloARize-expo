@@ -426,6 +426,7 @@ const ConfigurationView = ({ route, navigation }: Props) => {
 const styles_input = StyleSheet.create({
   sliders: {
     marginVertical: 10,
+    marginHorizontal: 20,
   },
   input_label: {
     // marginVertical: 5,
