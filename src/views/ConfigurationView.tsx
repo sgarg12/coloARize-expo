@@ -357,7 +357,6 @@ const ConfigurationView = ({ route, navigation }: Props) => {
                     <ColorButton
                         onPress={() => {
                             set_run_dispatch("Add");
-                            console.log("I set to Add");
                         }}
                         title="Create"
                         color={"#FFFFFF"}

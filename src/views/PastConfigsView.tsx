@@ -95,7 +95,7 @@ const get_config_component = (
         </TouchableOpacity>
     );
 };
-const get_config_components = (
+export const get_config_components = (
     on_press?: (config: Configuration) => void | undefined
 ) => {
     // let configs: ConfigurationList = [
@@ -118,15 +118,6 @@ const get_config_components = (
     //     },
     // ];
 
-    // {
-    //     const dispatch = useDispatch();
-    //     console.log("Rishi dispatching");
-    //     dispatch(deleteDichromacyConfiguration(configs[0]));
-    //     dispatch(deleteDichromacyConfiguration(configs[1]));
-    //     dispatch(addDichromacyConfiguration(configs[0]));
-    //     dispatch(addDichromacyConfiguration(configs[1]));
-    // }
-
     let configs: ConfigurationList = useSelector(
         (state: ConfigurationState) => state.configurations
     );
@@ -140,6 +131,7 @@ const get_config_components = (
     // components.push(<Text>Test 2</Text>);
     return <View>{components}</View>;
 };
+
 const PastConfigsView = ({ navigation }: Props) => {
     const goToScreen = () => {
         navigation.navigate("DichromacySelection");
