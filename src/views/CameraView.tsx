@@ -6,7 +6,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SimulationParams, DefaultParams } from "../redux/types";
 import { CameraStackParamList } from "../navigation/cameraStack";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import Slider from '@react-native-community/slider';
+import Slider from "@react-native-community/slider";
 import { Float } from "react-native/Libraries/Types/CodegenTypes";
 import { useDispatch } from "react-redux";
 import { editDichromacyConfiguration } from "../redux/actions";
@@ -239,7 +239,7 @@ const CameraView = ({ route, navigation }: Props) => {
   var camera: Camera;
   var glView: GL.GLView;
   var texture: WebGLTexture;
-  var phi2 = isSimParams(route.params.Parameters) ? 0.0 : route.params.Parameters.Phi;
+  var phi2 = isSimParams(route.params) ? 0.0 : route.params.Phi;
 
   useEffect(() => {
     if (_rafID !== undefined) {
@@ -255,7 +255,9 @@ const CameraView = ({ route, navigation }: Props) => {
     return glView!.createCameraTextureAsync(camera!);
   }
 
-  function isSimParams(param: SimulationParams | DefaultParams): param is SimulationParams {
+  function isSimParams(
+    param: SimulationParams | DefaultParams
+  ): param is SimulationParams {
     return (param as SimulationParams).Severity !== undefined;
   }
 
@@ -297,11 +299,11 @@ const CameraView = ({ route, navigation }: Props) => {
     // Set 'cameraTexture' uniform
     gl.uniform1i(gl.getUniformLocation(program, "cameraTexture"), 0);
 
-    const param  = route.params.Parameters;
+    const param = route.params;
     var simType: number;
     var hue_shift: Float;
 
-    if(isSimParams(param)) {
+    if (isSimParams(param)) {
       simType = param.Severity; //is this right, I'm still kinda confused should I be using dichromacy type to assign this, but then it would always be non zero I think
       hue_shift = 10.0;
     } else {
@@ -310,10 +312,10 @@ const CameraView = ({ route, navigation }: Props) => {
     }
 
     gl.useProgram(program);
-    gl.uniform1i(gl.getUniformLocation(program, 'simType'),  simType);
+    gl.uniform1i(gl.getUniformLocation(program, "simType"), simType);
 
     gl.useProgram(program);
-    gl.uniform1f(gl.getUniformLocation(program, 'hue_shift'), hue_shift);
+    gl.uniform1f(gl.getUniformLocation(program, "hue_shift"), hue_shift);
 
     // Activate unit 0
     gl.activeTexture(gl.TEXTURE0);
@@ -328,7 +330,7 @@ const CameraView = ({ route, navigation }: Props) => {
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
       gl.useProgram(program);
-      gl.uniform1f(gl.getUniformLocation(program, 'phi'), phi2);
+      gl.uniform1f(gl.getUniformLocation(program, "phi"), phi2);
 
       // Bind texture if created
       gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
@@ -349,18 +351,18 @@ const CameraView = ({ route, navigation }: Props) => {
   const dispatch = useDispatch();
 
   const changePhi = (val: number) => {
-   phi2 = val;
-   dispatch(
-    editDichromacyConfiguration({
-      Name: route.params.Name,
-      DichromacyType: route.params.DichromacyType,
-      AlgorithmType: route.params.AlgorithmType,
-      Parameters: {
-        Phi: val,
-        HueShift: (route.params.Parameters as DefaultParams).HueShift,
-      },
-    })
-  );
+    phi2 = val;
+    if (route.params.AlgorithmType !== "Simulation") {
+      dispatch(
+        editDichromacyConfiguration(
+          {
+            ...route.params,
+            Phi: val,
+          },
+          route.params.Name
+        )
+      );
+    }
   };
 
   return (
@@ -380,18 +382,18 @@ const CameraView = ({ route, navigation }: Props) => {
           <Text>Flip</Text>
         </TouchableOpacity>
         <Slider
-            style={{width: 200, height: 40}}
-            step={0.01}
-            minimumValue={0.1}
-            maximumValue={1.0}
-            value={phi2}
-            onValueChange={(slideValue) => {
-              changePhi(slideValue);
-            }}
-            minimumTrackTintColor="#C6ADFF"
-            maximumTrackTintColor="#d3d3d3"
-            thumbTintColor="#C6ADFF"
-          />
+          style={{ width: 200, height: 40 }}
+          step={0.01}
+          minimumValue={0.1}
+          maximumValue={1.0}
+          value={phi2}
+          onValueChange={(slideValue) => {
+            changePhi(slideValue);
+          }}
+          minimumTrackTintColor="#C6ADFF"
+          maximumTrackTintColor="#d3d3d3"
+          thumbTintColor="#C6ADFF"
+        />
       </View>
     </View>
   );
