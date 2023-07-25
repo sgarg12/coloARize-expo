@@ -3,7 +3,12 @@ import * as GL from "expo-gl";
 import { GLView } from "expo-gl";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { DefaultConfig, SimulatorConfig, SimulatorRemapConfig, Configuration } from "../redux/types";
+import {
+  DefaultConfig,
+  SimulatorConfig,
+  SimulatorRemapConfig,
+  Configuration,
+} from "../redux/types";
 import { CameraStackParamList } from "../navigation/cameraStack";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import Slider from "@react-native-community/slider";
@@ -238,7 +243,7 @@ const CameraView = ({ route, navigation }: Props) => {
   var camera: Camera;
   var glView: GL.GLView;
   var texture: WebGLTexture;
-  var phi: Float =  1.0;
+  var phi: Float = 1.0;
   var hue: Float = 0.0;
   var simType: number = 0;
   var severity: Float = 0.9;
@@ -259,36 +264,36 @@ const CameraView = ({ route, navigation }: Props) => {
 
   function initParams() {
     const { AlgorithmType } = route.params;
-      if (AlgorithmType === 'Default') {
-       const config = route.params as DefaultConfig;
-       phi = config.Phi;
-       hue = config.HueShift;
-       simType = 0;
-      } else if (AlgorithmType === 'Simulation') {
-        const config = route.params as SimulatorConfig;
-        phi = 1.0;
-        hue = 0;
-        severity = config.Severity;
-        if (config.DichromacyType === 'Deuteranopia') {
-          simType = 2;
-        } else if (config.DichromacyType === 'Protanopia') {
-          simType = 1;
-        } else {
-          simType = 3;
-        }
+    if (AlgorithmType === "Default") {
+      const config = route.params as DefaultConfig;
+      phi = config.Phi;
+      hue = config.HueShift;
+      simType = 0;
+    } else if (AlgorithmType === "Simulation") {
+      const config = route.params as SimulatorConfig;
+      phi = 1.0;
+      hue = 0;
+      severity = config.Severity;
+      if (config.DichromacyType === "Deuteranopia") {
+        simType = 2;
+      } else if (config.DichromacyType === "Protanopia") {
+        simType = 1;
       } else {
-        const config = route.params as SimulatorRemapConfig;
-        phi = config.Phi;
-        hue = config.HueShift;
-        severity = config.Severity;
-        if (config.DichromacyType === 'Deuteranopia') {
-          simType = 2;
-        } else if (config.DichromacyType === 'Protanopia') {
-          simType = 1;
-        } else {
-          simType = 3;
-        }
+        simType = 3;
       }
+    } else {
+      const config = route.params as SimulatorRemapConfig;
+      phi = config.Phi;
+      hue = config.HueShift;
+      severity = config.Severity;
+      if (config.DichromacyType === "Deuteranopia") {
+        simType = 2;
+      } else if (config.DichromacyType === "Protanopia") {
+        simType = 1;
+      } else {
+        simType = 3;
+      }
+    }
   }
 
   const onContextCreate = async (gl: GL.ExpoWebGLRenderingContext) => {
@@ -376,19 +381,14 @@ const CameraView = ({ route, navigation }: Props) => {
   const changePhi = (val: number) => {
     phi = val;
     var obj: Configuration;
-    if (route.params.AlgorithmType === 'Default') {
+    if (route.params.AlgorithmType === "Default") {
       obj = route.params as DefaultConfig;
       obj.Phi = val;
     } else {
       obj = route.params as SimulatorRemapConfig;
       obj.Phi = val;
     }
-      dispatch(
-        editDichromacyConfiguration(
-          obj,
-          route.params.Name
-        )
-      );
+    dispatch(editDichromacyConfiguration(obj, route.params.Name));
   };
 
   return (
@@ -407,22 +407,21 @@ const CameraView = ({ route, navigation }: Props) => {
         <TouchableOpacity style={styles.button} onPress={toggleFacing}>
           <Text>Flip</Text>
         </TouchableOpacity>
-        {
-          route.params.AlgorithmType != 'Simulation' &&
+        {route.params.AlgorithmType != "Simulation" && (
           <Slider
-          style={{ width: 200, height: 40 }}
-          step={0.01}
-          minimumValue={0.1}
-          maximumValue={1.0}
-          value={route.params.Phi}
-          onValueChange={(slideValue) => {
-            changePhi(slideValue);
-          }}
-          minimumTrackTintColor="#C6ADFF"
-          maximumTrackTintColor="#d3d3d3"
-          thumbTintColor="#C6ADFF"
-        />
-        }
+            style={{ width: 200, height: 40 }}
+            step={0.01}
+            minimumValue={0.1}
+            maximumValue={1.0}
+            value={route.params.Phi}
+            onValueChange={(slideValue) => {
+              changePhi(slideValue);
+            }}
+            minimumTrackTintColor="#C6ADFF"
+            maximumTrackTintColor="#d3d3d3"
+            thumbTintColor="#C6ADFF"
+          />
+        )}
       </View>
     </View>
   );

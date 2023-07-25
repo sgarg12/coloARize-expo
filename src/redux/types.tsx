@@ -3,36 +3,36 @@ export type DichromacyType = "Protanopia" | "Deuteranopia" | "Tritanopia";
 export type AlgorithmType = "Simulation" | "Default" | "SimulationRemap";
 
 export type SimulationParams = {
-    Severity: number;
+  Severity: number;
 };
 
 export type DefaultParams = {
-    HueShift: number;
-    Phi: number;
+  HueShift: number;
+  Phi: number;
 };
 
 export type BaseParams = {
-    Name: string;
-    DichromacyType: DichromacyType;
+  Name: string;
+  DichromacyType: DichromacyType;
 };
 
 export type DefaultConfig = BaseParams &
-    DefaultParams & { AlgorithmType: "Default" };
+  DefaultParams & { AlgorithmType: "Default" };
 
 export type SimulatorConfig = BaseParams &
-    SimulationParams & { AlgorithmType: "Simulation" };
+  SimulationParams & { AlgorithmType: "Simulation" };
 
 export type SimulatorRemapConfig = BaseParams &
-    DefaultParams &
-    SimulationParams & { AlgorithmType: "SimulationRemap" };
+  DefaultParams &
+  SimulationParams & { AlgorithmType: "SimulationRemap" };
 
 export type Configuration =
-    | DefaultConfig
-    | SimulatorConfig
-    | SimulatorRemapConfig;
+  | DefaultConfig
+  | SimulatorConfig
+  | SimulatorRemapConfig;
 
 export type ConfigurationList = Configuration[];
 
 export type ConfigurationState = {
-    configurations: ConfigurationList;
+  configurations: ConfigurationList;
 };

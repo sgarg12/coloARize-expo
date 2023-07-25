@@ -7,16 +7,16 @@ import { Configuration } from "../redux/types";
 type Props = NativeStackScreenProps<CameraStackParamList, "ConfigList">;
 
 const ConfigListView = ({ navigation }: Props) => {
-    let fields = get_config_components((config: Configuration) => {
-        navigation.navigate("Camera", config);
-    });
+  let fields = get_config_components((config: Configuration) => {
+    navigation.navigate("Camera", config);
+  });
 
-    return (
-        <>
-            <Text>Choose A Configuration</Text>
-            {fields}
-        </>
-    );
+  return (
+    <>
+      <Text>Choose A Configuration</Text>
+      {fields}
+    </>
+  );
 };
 
 export default ConfigListView;
