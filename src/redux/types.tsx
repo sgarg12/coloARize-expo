@@ -1,6 +1,6 @@
 export type DichromacyType = "Protanopia" | "Deuteranopia" | "Tritanopia";
 
-export type AlgorithmType = "Simulation" | "Default";
+export type AlgorithmType = "Simulation" | "Default" | "SimulationRemap";
 
 export type SimulationParams = {
     Severity: number;
@@ -11,15 +11,28 @@ export type DefaultParams = {
     Phi: number;
 };
 
-export type Configuration = {
+export type BaseParams = {
     Name: string;
     DichromacyType: DichromacyType;
-    AlgorithmType: AlgorithmType;
-    Parameters: SimulationParams | DefaultParams;
 };
+
+export type DefaultConfig = BaseParams &
+    DefaultParams & { AlgorithmType: "Default" };
+
+export type SimulatorConfig = BaseParams &
+    SimulationParams & { AlgorithmType: "Simulation" };
+
+export type SimulatorRemapConfig = BaseParams &
+    DefaultParams &
+    SimulationParams & { AlgorithmType: "SimulationRemap" };
+
+export type Configuration =
+    | DefaultConfig
+    | SimulatorConfig
+    | SimulatorRemapConfig;
 
 export type ConfigurationList = Configuration[];
 
 export type ConfigurationState = {
-  configurations: ConfigurationList;
+    configurations: ConfigurationList;
 };
