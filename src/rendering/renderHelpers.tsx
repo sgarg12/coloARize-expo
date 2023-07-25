@@ -96,7 +96,6 @@ export const applyShaders = (gl: GL.ExpoWebGLRenderingContext, texture: WebGLTex
 
   // Set 'textureSource' uniform
   gl.uniform1i(gl.getUniformLocation(program, "textureSource"), 0);
-  gl.uniform1i(gl.getUniformLocation(program, "simType"), simType);
 
   // Activate unit 0
   gl.activeTexture(gl.TEXTURE0);
@@ -115,6 +114,7 @@ export const applyShaders = (gl: GL.ExpoWebGLRenderingContext, texture: WebGLTex
     gl.uniform1f(gl.getUniformLocation(program, "phi"), phi);
     gl.uniform1f(gl.getUniformLocation(program, "severity"), severity);
     gl.uniform1f(gl.getUniformLocation(program, "hue_shift"), hue);
+    gl.uniform1i(gl.getUniformLocation(program, "simType"), simType);
 
     // Bind texture if created
     gl.bindTexture(gl.TEXTURE_2D, texture);

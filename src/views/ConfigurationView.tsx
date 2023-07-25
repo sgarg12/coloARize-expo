@@ -347,7 +347,19 @@ const ConfigurationView = ({ route, navigation }: Props) => {
               set_new_config(cfg);
 
               if (!val) {
-                updateParams({severity:0.0})
+                updateParams({severity:0.0, simType:0})
+              } else {
+                switch (rparams.dichromacy_type) {
+                  case "Protanopia":
+                    updateParams({simType:1})
+                    break;
+                  case "Deuteranopia":
+                    updateParams({simType:2})
+                    break;
+                  case "Tritanopia":
+                    updateParams({simType:3})
+                    break;
+                }
               }
             }}
           />
