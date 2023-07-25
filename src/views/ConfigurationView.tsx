@@ -41,6 +41,7 @@ import {
     SimulatorRemapConfig,
 } from "../redux/types";
 import { AnyAction } from "redux";
+import Checkbox from "expo-checkbox";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Config">;
 
@@ -137,20 +138,35 @@ const ConfigurationView = ({ route, navigation }: Props) => {
             fontSize: 16,
             // fontWeight: "bold",
         },
-
+        text_input_container: {
+            marginVertical: 10,
+        },
         text_input: {
             height: 35,
             marginHorizontal: 10,
             borderWidth: 1,
             paddingHorizontal: 10,
         },
+
+        checkbox_container: {
+            flexDirection: "row",
+            justifyContent: "flex-start",
+            marginHorizontal: 10,
+            marginVertical: 10,
+        },
+        checkbox_container_inner: {
+            width: 23,
+            height: 23,
+        },
+        checkbox_container_label: {
+            marginHorizontal: 10,
+        },
     });
 
     const dispatch = useDispatch();
-    // const [phi, set_phi] = useState(0);
-    // const [hue_shift, set_hue_shift] = useState(0);
-    // const [name, set_name] = useState("");
-    // const [severity, set_severity] = useState(0);
+    const [flag_remap, set_flag_remap] = useState(true);
+    const [flag_simulation, set_flag_simulation] = useState(false);
+
     const [new_config, set_new_config] = useState<Configuration>(
         create_new_config(
             rparams.algorithm_type,
@@ -194,22 +210,6 @@ const ConfigurationView = ({ route, navigation }: Props) => {
             },
         });
 
-        // const dispatch = useDispatch();
-
-        // dispatch(
-        //     addDichromacyConfiguration({
-        //         Name: "test",
-        //         DichromacyType: "Tritanopia",
-        //         AlgorithmType: "Default",
-        //         Parameters: {
-        //             Severity: 1,
-        //             HueShift: 1,
-        //         },
-        //     })
-        // );
-
-        // console.log(useSelector((state: ConfigurationState) => state.configurations));
-
         return (
             <View style={styles.view_images}>
                 <View style={styles.image}>
@@ -227,85 +227,7 @@ const ConfigurationView = ({ route, navigation }: Props) => {
     const renderInputsDefault = () => {
         return (
             <View>
-                <View>
-                    <Text style={styles_input.input_label}>
-                        Enter Config Name:
-                    </Text>
-                    <TextInput
-                        style={styles_input.text_input}
-                        onChangeText={(name) => {
-                            set_new_config({
-                                ...new_config,
-                                Name: name,
-                            });
-
-                            // console.log("Rishi 1");
-                            // console.log(new_config);
-                        }}
-                        value={new_config.Name}
-                    ></TextInput>
-                </View>
-                <View style={styles_input.sliders}>
-                    <Text style={styles_input.input_label}>Phi</Text>
-                    <Slider
-                        step={0.001}
-                        minimumValue={0.0}
-                        maximumValue={1.0}
-                        value={
-                            (new_config as DefaultConfig | SimulatorRemapConfig)
-                                .Phi
-                        }
-                        onValueChange={(slideValue) => {
-                            if (new_config.AlgorithmType !== "Simulation") {
-                                set_new_config({
-                                    ...new_config,
-                                    Phi: slideValue,
-                                });
-                            }
-                        }}
-                        minimumTrackTintColor="#C6ADFF"
-                        maximumTrackTintColor="#d3d3d3"
-                        thumbTintColor="#C6ADFF"
-                    />
-                </View>
-
-                <View style={styles_input.sliders}>
-                    <Text style={styles_input.input_label}>Hue range</Text>
-                    <Slider
-                        step={0.001}
-                        minimumValue={0.0}
-                        maximumValue={1.0}
-                        value={
-                            (new_config as DefaultConfig | SimulatorRemapConfig)
-                                .HueShift
-                        }
-                        onValueChange={(slideValue) => {
-                            if (new_config.AlgorithmType !== "Simulation") {
-                                set_new_config({
-                                    ...new_config,
-                                    HueShift: slideValue,
-                                });
-                            }
-                        }}
-                        minimumTrackTintColor="#C6ADFF"
-                        maximumTrackTintColor="#d3d3d3"
-                        thumbTintColor="#C6ADFF"
-                    />
-                </View>
-            </View>
-        );
-    };
-
-    const renderInputsSimulation = () => {
-        // let config = new_config;
-        // const param = config.Parameters as SimulationParams;
-
-        // set_severity(param.Severity);
-        // set_name(config.Name);
-
-        return (
-            <View>
-                <View>
+                <View style={styles_input.text_input_container}>
                     <Text style={styles_input.input_label}>
                         Enter Config Name:
                     </Text>
@@ -320,32 +242,133 @@ const ConfigurationView = ({ route, navigation }: Props) => {
                         value={new_config.Name}
                     ></TextInput>
                 </View>
-                <View style={styles_input.sliders}>
-                    <Text style={styles_input.input_label}>Severity</Text>
-                    <Slider
-                        step={0.001}
-                        minimumValue={0.0}
-                        maximumValue={1.0}
-                        value={
-                            (
-                                new_config as
-                                    | SimulatorConfig
-                                    | SimulatorRemapConfig
-                            ).Severity
-                        }
-                        onValueChange={(slideValue) => {
-                            if (new_config.AlgorithmType !== "Default") {
-                                set_new_config({
-                                    ...new_config,
-                                    Severity: slideValue,
-                                });
-                            }
+
+                <View style={styles_input.checkbox_container}>
+                    <Text style={styles_input.checkbox_container_label}>
+                        Enable Remap Params
+                    </Text>
+                    <Checkbox
+                        style={styles_input.checkbox_container_inner}
+                        value={flag_remap}
+                        onValueChange={(val) => {
+                            set_flag_remap(val);
                         }}
-                        minimumTrackTintColor="#C6ADFF"
-                        maximumTrackTintColor="#d3d3d3"
-                        thumbTintColor="#C6ADFF"
+                        // color={flag_remap ? '#' }
                     />
                 </View>
+
+                {flag_remap && (
+                    <>
+                        <View style={styles_input.sliders}>
+                            <Text style={styles_input.input_label}>Phi</Text>
+                            <Slider
+                                step={0.001}
+                                minimumValue={0.0}
+                                maximumValue={1.0}
+                                value={
+                                    (
+                                        new_config as
+                                            | DefaultConfig
+                                            | SimulatorRemapConfig
+                                    ).Phi
+                                }
+                                onValueChange={(slideValue) => {
+                                    if (
+                                        new_config.AlgorithmType !==
+                                        "Simulation"
+                                    ) {
+                                        set_new_config({
+                                            ...new_config,
+                                            Phi: slideValue,
+                                        });
+                                    }
+                                }}
+                                minimumTrackTintColor="#C6ADFF"
+                                maximumTrackTintColor="#d3d3d3"
+                                thumbTintColor="#C6ADFF"
+                            />
+                        </View>
+                        <View style={styles_input.sliders}>
+                            <Text style={styles_input.input_label}>
+                                Hue range
+                            </Text>
+                            <Slider
+                                step={0.001}
+                                minimumValue={0.0}
+                                maximumValue={1.0}
+                                value={
+                                    (
+                                        new_config as
+                                            | DefaultConfig
+                                            | SimulatorRemapConfig
+                                    ).HueShift
+                                }
+                                onValueChange={(slideValue) => {
+                                    if (
+                                        new_config.AlgorithmType !==
+                                        "Simulation"
+                                    ) {
+                                        set_new_config({
+                                            ...new_config,
+                                            HueShift: slideValue,
+                                        });
+                                    }
+                                }}
+                                minimumTrackTintColor="#C6ADFF"
+                                maximumTrackTintColor="#d3d3d3"
+                                thumbTintColor="#C6ADFF"
+                            />
+                        </View>
+                    </>
+                )}
+
+                <View style={styles_input.checkbox_container}>
+                    <Text style={styles_input.checkbox_container_label}>
+                        Enable Simulation Params
+                    </Text>
+                    <Checkbox
+                        style={styles_input.checkbox_container_inner}
+                        value={flag_simulation}
+                        onValueChange={(val) => {
+                            set_flag_simulation(val);
+                        }}
+                    />
+                </View>
+
+                {flag_simulation && (
+                    <>
+                        <View style={styles_input.sliders}>
+                            <Text style={styles_input.input_label}>
+                                Severity
+                            </Text>
+                            <Slider
+                                step={0.001}
+                                minimumValue={0.0}
+                                maximumValue={1.0}
+                                value={
+                                    (
+                                        new_config as
+                                            | SimulatorConfig
+                                            | SimulatorRemapConfig
+                                    ).Severity
+                                }
+                                onValueChange={(slideValue) => {
+                                    if (
+                                        new_config.AlgorithmType !== "Default"
+                                    ) {
+                                        set_new_config({
+                                            ...new_config,
+                                            Severity: slideValue,
+                                        });
+                                    }
+                                }}
+                                minimumTrackTintColor="#C6ADFF"
+                                maximumTrackTintColor="#d3d3d3"
+                                thumbTintColor="#C6ADFF"
+                            />
+                        </View>
+                    </>
+                )}
             </View>
         );
     };
@@ -395,7 +418,11 @@ const ConfigurationView = ({ route, navigation }: Props) => {
     };
 
     let screen;
-    if (new_config.AlgorithmType == "Default") {
+    if (
+        new_config.AlgorithmType == "Default" ||
+        new_config.AlgorithmType == "Simulation" ||
+        new_config.AlgorithmType == "SimulationRemap"
+    ) {
         screen = (
             <View>
                 <Text style={styles.text_header}>
@@ -403,17 +430,6 @@ const ConfigurationView = ({ route, navigation }: Props) => {
                 </Text>
                 {renderImages("Remapped Image")}
                 {renderInputsDefault()}
-                {renderActions()}
-            </View>
-        );
-    } else if (new_config.AlgorithmType == "Simulation") {
-        screen = (
-            <View>
-                <Text style={styles.text_header}>
-                    {rparams.dichromacy_type}
-                </Text>
-                {renderImages("Simulated Image")}
-                {renderInputsSimulation()}
                 {renderActions()}
             </View>
         );

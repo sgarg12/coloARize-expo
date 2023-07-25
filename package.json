@@ -24,6 +24,7 @@
     "@types/react-native-vector-icons": "^6.4.13",
     "expo": "^49.0.0",
     "expo-camera": "~13.4.2",
+    "expo-checkbox": "^2.4.0",
     "expo-constants": "~14.4.2",
     "expo-gl": "~13.0.1",
     "expo-gl-cpp": "^11.4.0",
