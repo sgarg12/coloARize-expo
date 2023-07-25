@@ -57,7 +57,7 @@ const get_image = (type: DichromacyType) => {
   }
 };
 
-const create_new_config = (
+export const create_new_config = (
   alg_type: AlgorithmType,
   d_type: DichromacyType,
   old_config: Configuration | null

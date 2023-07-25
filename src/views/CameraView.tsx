@@ -15,6 +15,7 @@ import Slider from "@react-native-community/slider";
 import { Float } from "react-native/Libraries/Types/CodegenTypes";
 import { useDispatch } from "react-redux";
 import { editDichromacyConfiguration } from "../redux/actions";
+import { create_new_config } from "./ConfigurationView";
 
 const vertShaderSource = `#version 300 es
 precision highp float;
@@ -238,6 +239,13 @@ const CameraView = ({ route, navigation }: Props) => {
   const title = "Expo.Camera integration";
 
   const [type, setType] = useState(CameraType.back);
+  const [newConfig, setNewConfig] = useState<Configuration>(
+    create_new_config(
+      route.params.AlgorithmType,
+      route.params.DichromacyType,
+      route.params
+    )
+  );
 
   var _rafID: number = 0;
   var camera: Camera;
@@ -378,17 +386,18 @@ const CameraView = ({ route, navigation }: Props) => {
 
   const dispatch = useDispatch();
 
+  const saveConfig = () => {
+    dispatch(editDichromacyConfiguration(newConfig, route.params.Name));
+  };
+
   const changePhi = (val: number) => {
     phi = val;
-    var obj: Configuration;
+
     if (route.params.AlgorithmType === "Default") {
-      obj = route.params as DefaultConfig;
-      obj.Phi = val;
+      setNewConfig({ ...(route.params as DefaultConfig), Phi: val });
     } else {
-      obj = route.params as SimulatorRemapConfig;
-      obj.Phi = val;
+      setNewConfig({ ...(route.params as SimulatorRemapConfig), Phi: val });
     }
-    dispatch(editDichromacyConfiguration(obj, route.params.Name));
   };
 
   return (
@@ -404,8 +413,8 @@ const CameraView = ({ route, navigation }: Props) => {
         ref={(ref) => (glView = ref!)}
       />
       <View style={styles.buttons}>
-        <TouchableOpacity style={styles.button} onPress={toggleFacing}>
-          <Text>Flip</Text>
+        <TouchableOpacity style={styles.button} onPress={saveConfig}>
+          <Text>Save</Text>
         </TouchableOpacity>
         {route.params.AlgorithmType != "Simulation" && (
           <Slider
