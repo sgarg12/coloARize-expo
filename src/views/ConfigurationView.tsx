@@ -1,17 +1,13 @@
-import React, { Dispatch, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
-  Button,
   Text,
   Image,
   View,
-  ImageSourcePropType,
   TextInput,
-  SafeAreaView,
   ScrollView,
 } from "react-native";
 import {
-  NativeStackNavigationProp,
   NativeStackScreenProps,
 } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/configStack";
@@ -20,10 +16,9 @@ import {
   DeuteranopiaQuizAnswerKey,
   ProtanopiaQuizAnswerKey,
   TritanopiaQuizAnswerKey,
-  quizQuestion,
 } from "../data/quizData";
 import ColorButton from "../components/button";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import {
   addDichromacyConfiguration,
   deleteDichromacyConfiguration,
@@ -31,19 +26,20 @@ import {
 } from "../redux/actions";
 import {
   Configuration,
-  ConfigurationList,
   AlgorithmType,
   DichromacyType,
   SimulationParams,
   DefaultParams,
-  ConfigurationState,
   BaseParams,
   DefaultConfig,
   SimulatorConfig,
   SimulatorRemapConfig,
 } from "../redux/types";
-import { AnyAction } from "redux";
 import Checkbox from "expo-checkbox";
+import * as GL from "expo-gl";
+import { GLView } from "expo-gl";
+import { applyShaders, initParams, updateParams } from "../rendering/renderHelpers";
+import { Asset } from "expo-asset";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Config">;
 
@@ -131,6 +127,36 @@ const ConfigurationView = ({ route, navigation }: Props) => {
     },
   });
 
+  var _rafID: number = 0;
+
+  useEffect(() => {
+    if (_rafID !== undefined) {
+      cancelAnimationFrame(_rafID);
+    }
+  }, [_rafID]);
+
+  const onContextCreate = async (gl: GL.ExpoWebGLRenderingContext) => {
+    var imageAsset = Asset.fromModule(image.valueOf() as any);
+    await imageAsset.downloadAsync();
+
+    const imageTexture = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, imageTexture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, imageAsset as any);
+
+    const setRafID = (callback:() => number) => {
+      _rafID = callback()
+    }
+
+    initParams(new_config)
+
+    if (imageTexture != null) {
+      applyShaders(gl, imageTexture, setRafID);
+    }
+  };
+
   const dispatch = useDispatch();
 
   let flag_remap_init = true;
@@ -204,7 +230,10 @@ const ConfigurationView = ({ route, navigation }: Props) => {
           <Text style={{ marginVertical: 5 }}> Original Image </Text>
         </View>
         <View style={styles.image}>
-          <Image source={image} />
+          <GLView
+            style={{width:180, height:180}}
+            onContextCreate={onContextCreate}
+          />
           <Text style={{ marginVertical: 5 }}> {label_2} </Text>
         </View>
       </View>
@@ -243,6 +272,10 @@ const ConfigurationView = ({ route, navigation }: Props) => {
                 new_config
               );
               set_new_config(cfg);
+
+              if (!val) {
+                updateParams({phi:1.0, hue:0.0})
+              }
             }}
             // color={flag_remap ? '#' }
           />
@@ -264,6 +297,7 @@ const ConfigurationView = ({ route, navigation }: Props) => {
                       Phi: slideValue,
                     });
                   }
+                  updateParams({phi:slideValue})
                 }}
                 minimumTrackTintColor="#C6ADFF"
                 maximumTrackTintColor="#d3d3d3"
@@ -286,6 +320,7 @@ const ConfigurationView = ({ route, navigation }: Props) => {
                       HueShift: slideValue,
                     });
                   }
+                  updateParams({hue:slideValue})
                 }}
                 minimumTrackTintColor="#C6ADFF"
                 maximumTrackTintColor="#d3d3d3"
@@ -310,6 +345,10 @@ const ConfigurationView = ({ route, navigation }: Props) => {
                 new_config
               );
               set_new_config(cfg);
+
+              if (!val) {
+                updateParams({severity:0.0})
+              }
             }}
           />
         </View>
@@ -333,6 +372,8 @@ const ConfigurationView = ({ route, navigation }: Props) => {
                       Severity: slideValue,
                     });
                   }
+
+                  updateParams({severity:slideValue})
                 }}
                 minimumTrackTintColor="#C6ADFF"
                 maximumTrackTintColor="#d3d3d3"
