@@ -6,6 +6,7 @@ import {
   View,
   Button,
   Text,
+  ScrollView,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/configStack";
@@ -145,7 +146,7 @@ const PastConfigsView = ({ navigation }: Props) => {
     });
   });
   return (
-    <>
+    <ScrollView>
       <ColorButton
         onPress={() => goToScreen()}
         title="New Config"
@@ -154,7 +155,7 @@ const PastConfigsView = ({ navigation }: Props) => {
       />
 
       {fields}
-    </>
+    </ScrollView>
     //Other components
   );
 };

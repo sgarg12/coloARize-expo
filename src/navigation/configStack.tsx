@@ -58,4 +58,6 @@ const screenOptions: NativeStackNavigationOptions = {
   headerTitleStyle: {
     color: "#FFFFFF",
   },
+  headerTintColor: "#FFFFFF",
+  headerBackTitleVisible: false,
 };

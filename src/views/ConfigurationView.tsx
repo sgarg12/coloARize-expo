@@ -131,41 +131,6 @@ const ConfigurationView = ({ route, navigation }: Props) => {
     },
   });
 
-  const styles_input = StyleSheet.create({
-    sliders: {
-      marginVertical: 10,
-    },
-    input_label: {
-      // marginVertical: 5,
-      marginHorizontal: 10,
-      fontSize: 16,
-      // fontWeight: "bold",
-    },
-    text_input_container: {
-      marginVertical: 10,
-    },
-    text_input: {
-      height: 35,
-      marginHorizontal: 10,
-      borderWidth: 1,
-      paddingHorizontal: 10,
-    },
-
-    checkbox_container: {
-      flexDirection: "row",
-      justifyContent: "flex-start",
-      marginHorizontal: 10,
-      marginVertical: 10,
-    },
-    checkbox_container_inner: {
-      width: 23,
-      height: 23,
-    },
-    checkbox_container_label: {
-      marginHorizontal: 10,
-    },
-  });
-
   const dispatch = useDispatch();
 
   let flag_remap_init = true;
@@ -381,6 +346,7 @@ const ConfigurationView = ({ route, navigation }: Props) => {
   };
 
   const renderActions = () => {
+    var isDisabled = !flag_remap && !flag_simulation;
     if (old_name == null) {
       return (
         <View>
@@ -391,8 +357,13 @@ const ConfigurationView = ({ route, navigation }: Props) => {
             title="Create"
             color={"#FFFFFF"}
             backgroundColour={"#724DC6"}
-            disabled={!flag_remap && !flag_simulation}
+            disabled={isDisabled}
           />
+          {isDisabled && (
+            <Text style={styles_input.error_text}>
+              Please select at least one setting
+            </Text>
+          )}
         </View>
       );
     } else {
@@ -411,7 +382,7 @@ const ConfigurationView = ({ route, navigation }: Props) => {
             title="Save"
             color={"#FFFFFF"}
             backgroundColour={"#724DC6"}
-            disabled={!flag_remap && !flag_simulation}
+            disabled={isDisabled}
           />
           <ColorButton
             onPress={() => {
@@ -421,6 +392,11 @@ const ConfigurationView = ({ route, navigation }: Props) => {
             color={"#FFFFFF"}
             backgroundColour={"#FF6B6B"}
           />
+          {isDisabled && (
+            <Text style={styles_input.error_text}>
+              Please select at least one setting
+            </Text>
+          )}
         </View>
       );
     }
@@ -433,20 +409,58 @@ const ConfigurationView = ({ route, navigation }: Props) => {
     new_config.AlgorithmType == "SimulationRemap"
   ) {
     screen = (
-      <SafeAreaView>
-        <ScrollView>
-          <View>
-            <Text style={styles.text_header}>{rparams.dichromacy_type}</Text>
-            {renderImages("Remapped Image")}
-            {renderInputsDefault()}
-            {renderActions()}
-          </View>
-        </ScrollView>
-      </SafeAreaView>
+      <ScrollView>
+        <View>
+          <Text style={styles.text_header}>{rparams.dichromacy_type}</Text>
+          {renderImages("Remapped Image")}
+          {renderInputsDefault()}
+          {renderActions()}
+        </View>
+      </ScrollView>
     );
   }
 
   return <>{screen}</>;
 };
+
+const styles_input = StyleSheet.create({
+  sliders: {
+    marginVertical: 10,
+  },
+  input_label: {
+    // marginVertical: 5,
+    marginHorizontal: 10,
+    fontSize: 16,
+    // fontWeight: "bold",
+  },
+  text_input_container: {
+    marginVertical: 10,
+  },
+  text_input: {
+    height: 35,
+    marginHorizontal: 10,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+  },
+
+  checkbox_container: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    marginHorizontal: 10,
+    marginVertical: 10,
+  },
+  checkbox_container_inner: {
+    width: 23,
+    height: 23,
+  },
+  checkbox_container_label: {
+    marginHorizontal: 10,
+  },
+  error_text: {
+    fontSize: 14,
+    color: "#E75858",
+    textAlign: "center",
+  },
+});
 
 export default ConfigurationView;

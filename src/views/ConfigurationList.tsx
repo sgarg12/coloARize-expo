@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Text } from "react-native";
+import { Button, ScrollView, Text, View, StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { CameraStackParamList } from "../navigation/cameraStack";
 import { get_config_components } from "./PastConfigsView";
@@ -12,11 +12,16 @@ const ConfigListView = ({ navigation }: Props) => {
   });
 
   return (
-    <>
-      <Text>Choose A Configuration</Text>
-      {fields}
-    </>
+    <ScrollView style={styles.container}>
+      <View>{fields}</View>
+    </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginVertical: 20,
+  },
+});
 
 export default ConfigListView;
