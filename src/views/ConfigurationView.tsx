@@ -22,6 +22,7 @@ import {
   deleteDichromacyConfiguration,
   editDichromacyConfiguration,
 } from '../redux/actions';
+import { store } from '../redux/store';
 import {
   Configuration,
   AlgorithmType,
@@ -66,9 +67,7 @@ export const create_new_config = (
   d_type: DichromacyType,
   old_config: Configuration | null
 ): any => {
-  const config_len: number = useSelector(
-    (state: ConfigurationState) => state.configurations.length
-  );
+  const config_len = store.getState().configurations.length;
   const default_new_name = 'config_' + (config_len + 1).toString();
 
   let base_params: BaseParams =
