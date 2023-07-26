@@ -1,8 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useState } from "react";
-
+import { Image } from "expo-image";
 import {
-  Image,
   Text,
   SafeAreaView,
   View,
@@ -98,7 +97,12 @@ const QuizView = () => {
 
         <View style={{ justifyContent: "center", alignItems: "center" }}>
           <Text style={{ fontSize: 30 }}>What number do you see?</Text>
-          <Image source={questions[currentQuestionIndex].image} />
+          <Image
+            source={questions[currentQuestionIndex].image}
+            contentFit="cover"
+            style={{ width: 250, height: 250, borderRadius: 50 }}
+            cachePolicy={"memory"}
+          />
         </View>
       </View>
     );
@@ -217,6 +221,9 @@ const QuizView = () => {
   const restartQuiz = () => {
     setQuestions(getQuestions());
     setShowDiagnosticModal(false);
+    setIncorrectDeuteranopiaQuestions(0);
+    setIncorrectProtanopiaQuestions(0);
+    setIncorrectTritanopiaQuestions(0);
     setCurrentQuestionIndex(0);
   };
 
