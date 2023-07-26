@@ -47,10 +47,10 @@ const QuizView = () => {
       questions[i + 20] = tritanopiaQuestions[i];
     }
 
-    return questions;
+    return shuffle(questions);
   };
 
-  var questions: quizQuestion[] = shuffle(getQuestions());
+  const [questions, setQuestions] = useState<quizQuestion[]>(getQuestions);
 
   const handleNext = () => {
     if (currentQuestionIndex === questions.length - 1) {
@@ -215,6 +215,7 @@ const QuizView = () => {
   };
 
   const restartQuiz = () => {
+    setQuestions(getQuestions());
     setShowDiagnosticModal(false);
     setCurrentQuestionIndex(0);
   };

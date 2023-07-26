@@ -7,9 +7,7 @@ import {
   TextInput,
   ScrollView,
 } from "react-native";
-import {
-  NativeStackScreenProps,
-} from "@react-navigation/native-stack";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/configStack";
 import Slider from "@react-native-community/slider";
 import {
@@ -38,19 +36,27 @@ import {
 import Checkbox from "expo-checkbox";
 import * as GL from "expo-gl";
 import { GLView } from "expo-gl";
-import { applyShaders, initParams, updateParams } from "../rendering/renderHelpers";
+import {
+  applyShaders,
+  initParams,
+  updateParams,
+} from "../rendering/renderHelpers";
 import { Asset } from "expo-asset";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Config">;
 
-const get_image = (type: DichromacyType) => {
+const get_image = (type: DichromacyType, index: number) => {
   if (type == "Protanopia") {
-    return ProtanopiaQuizAnswerKey[0].image;
+    return ProtanopiaQuizAnswerKey[index].image;
   } else if (type == "Deuteranopia") {
-    return DeuteranopiaQuizAnswerKey[0].image;
+    return DeuteranopiaQuizAnswerKey[index].image;
   } else {
-    return TritanopiaQuizAnswerKey[0].image;
+    return TritanopiaQuizAnswerKey[index].image;
   }
+};
+
+const getRandomIndex = (length: number) => {
+  return Math.floor(Math.random() * length);
 };
 
 export const create_new_config = (
@@ -112,8 +118,10 @@ export const create_new_config = (
 };
 
 const ConfigurationView = ({ route, navigation }: Props) => {
+  const [index, setIndex] = useState(getRandomIndex(15));
+
   const rparams = route.params;
-  const image = get_image(rparams.dichromacy_type);
+  const image = get_image(rparams.dichromacy_type, index);
 
   const old_name = rparams.config == null ? null : rparams.config.Name;
   const styles = StyleSheet.create({
@@ -144,13 +152,21 @@ const ConfigurationView = ({ route, navigation }: Props) => {
     gl.bindTexture(gl.TEXTURE_2D, imageTexture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, imageAsset as any);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      imageAsset as any
+    );
+    gl;
 
-    const setRafID = (callback:() => number) => {
-      _rafID = callback()
-    }
+    const setRafID = (callback: () => number) => {
+      _rafID = callback();
+    };
 
-    initParams(new_config)
+    initParams(new_config);
 
     if (imageTexture != null) {
       applyShaders(gl, imageTexture, setRafID);
@@ -231,7 +247,11 @@ const ConfigurationView = ({ route, navigation }: Props) => {
         </View>
         <View style={styles.image}>
           <GLView
-            style={{width:180, height:180}}
+            style={{
+              width: 180,
+              height: 180,
+              transform: [{ rotateY: "180deg" }],
+            }}
             onContextCreate={onContextCreate}
           />
           <Text style={{ marginVertical: 5 }}> {label_2} </Text>
@@ -274,7 +294,7 @@ const ConfigurationView = ({ route, navigation }: Props) => {
               set_new_config(cfg);
 
               if (!val) {
-                updateParams({phi:1.0, hue:0.0})
+                updateParams({ phi: 1.0, hue: 0.0 });
               }
             }}
             // color={flag_remap ? '#' }
@@ -297,7 +317,7 @@ const ConfigurationView = ({ route, navigation }: Props) => {
                       Phi: slideValue,
                     });
                   }
-                  updateParams({phi:slideValue})
+                  updateParams({ phi: slideValue });
                 }}
                 minimumTrackTintColor="#C6ADFF"
                 maximumTrackTintColor="#d3d3d3"
@@ -320,7 +340,7 @@ const ConfigurationView = ({ route, navigation }: Props) => {
                       HueShift: slideValue,
                     });
                   }
-                  updateParams({hue:slideValue})
+                  updateParams({ hue: slideValue });
                 }}
                 minimumTrackTintColor="#C6ADFF"
                 maximumTrackTintColor="#d3d3d3"
@@ -347,17 +367,17 @@ const ConfigurationView = ({ route, navigation }: Props) => {
               set_new_config(cfg);
 
               if (!val) {
-                updateParams({severity:0.0, simType:0})
+                updateParams({ severity: 0.0, simType: 0 });
               } else {
                 switch (rparams.dichromacy_type) {
                   case "Protanopia":
-                    updateParams({simType:1})
+                    updateParams({ simType: 1 });
                     break;
                   case "Deuteranopia":
-                    updateParams({simType:2})
+                    updateParams({ simType: 2 });
                     break;
                   case "Tritanopia":
-                    updateParams({simType:3})
+                    updateParams({ simType: 3 });
                     break;
                 }
               }
@@ -385,7 +405,7 @@ const ConfigurationView = ({ route, navigation }: Props) => {
                     });
                   }
 
-                  updateParams({severity:slideValue})
+                  updateParams({ severity: slideValue });
                 }}
                 minimumTrackTintColor="#C6ADFF"
                 maximumTrackTintColor="#d3d3d3"
