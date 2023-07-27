@@ -124,7 +124,7 @@ const QuizView = () => {
             style={{
               justifyContent: "center",
               alignItems: "center",
-              width: option === "Not Sure" ? 150 : 50,
+              width: option === "Not Sure" ? 140 : 60,
               borderWidth: 3,
               borderColor: "#FFFFFF",
               backgroundColor: "#724DC6",
