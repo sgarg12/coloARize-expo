@@ -182,7 +182,7 @@ const QuizView = () => {
                   fontSize: 20,
                 }}
               >
-                Retry Quiz
+                Done
               </Text>
             </TouchableOpacity>
           </View>
