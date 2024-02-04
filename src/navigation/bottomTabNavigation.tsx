@@ -12,6 +12,7 @@ import {
   faGear,
 } from "@fortawesome/free-solid-svg-icons";
 import CameraStack from "./cameraStack";
+import { DeviceConnectDisconnectTestScreen } from "../views/BLEView";
 
 const Tab = createBottomTabNavigator();
 
@@ -71,6 +72,15 @@ export const BottomTabNav = () => {
         options={{
           headerShown: false,
           tabBarLabel: "Config",
+          tabBarIcon: () => <FontAwesomeIcon icon={faGear} color={"#FFFFFF"} />,
+        }}
+      />
+      <Tab.Screen
+        name={"DEVICE_CONNECT_DISCONNECT_TEST_SCREEN"}
+        component={DeviceConnectDisconnectTestScreen}
+        options={{
+          headerShown: false,
+          tabBarLabel: "BLE",
           tabBarIcon: () => <FontAwesomeIcon icon={faGear} color={"#FFFFFF"} />,
         }}
       />
