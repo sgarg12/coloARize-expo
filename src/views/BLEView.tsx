@@ -1,232 +1,70 @@
-import React, { useRef, useState } from 'react'
-import type { NativeStackScreenProps } from '@react-navigation/native-stack'
-import { BleError, Characteristic, Device, type Subscription, type DeviceId, BleErrorCode } from 'react-native-ble-plx'
-import { ScrollView } from 'react-native'
-import base64 from 'react-native-base64'
-import Toast from 'react-native-toast-message'
-import type { TestStateType } from '../data/testStateType'
-import { BLEService } from '../services/BLEService'
-import { AppButton } from '../components/atoms/BLEButton/Button'
-import { AppTextInput } from '../components/atoms/AppTextInput/AppTextInput'
-import { ScreenDefaultContainer } from '../components/atoms/ScreenDefaultContainer/ScreenDefaultContainer'
-import { TestStateDisplay } from '../components/atoms/TestStateDisplay/TestStateDisplay'
-import { currentTimeCharacteristic, deviceTimeService } from '../data/nRFDeviceConsts'
-import { wait } from '../services/wait'
+import { Buffer } from "buffer";
+import { BleManager, Device, Service } from "react-native-ble-plx";
+import { BLEService } from "../services/BLEService";
+import { deviceTimeService } from "../data/nRFDeviceConsts";
+import { Configuration } from "../redux/types";
 
-//'DEVICE_CONNECT_DISCONNECT_TEST_SCREEN
-const NUMBER_OF_CALLS_IN_THE_TEST_SCENARIO = 10
+class DeviceConnectDisconnect {
+  deviceId: string;
+  isConnected: boolean;
 
-export const DeviceConnectDisconnectTestScreen = () => {
-  const [expectedDeviceName, setExpectedDeviceName] = useState('')
-  const [testScanDevicesState, setTestScanDevicesState] = useState<TestStateType>('WAITING')
-  const [deviceId, setDeviceId] = useState('')
-  const [connectCounter, setConnectCounter] = useState(0)
-  const [characteristicDiscoverCounter, setCharacteristicDiscoverCounter] = useState(0)
-  const [connectInDisconnectTestCounter, setConnectInDisconnectTestCounter] = useState(0)
-  const [disconnectCounter, setDisconnectCounter] = useState(0)
-  const [monitorMessages, setMonitorMessages] = useState<string[]>([])
-  const monitorSubscriptionRef = useRef<Subscription | null>(null)
-
-  const addMonitorMessage = (message: string) => setMonitorMessages(prevMessages => [...prevMessages, message])
-
-  const checkDeviceName = (device: Device) =>
-    device.name?.toLocaleLowerCase() === expectedDeviceName.toLocaleLowerCase()
-
-  const startConnectAndDiscover = async () => {
-    setTestScanDevicesState('IN_PROGRESS')
-    await BLEService.initializeBLE()
-    await BLEService.scanDevices(connectAndDiscoverOnDeviceFound, [deviceTimeService])
+  constructor() {
+    this.deviceId = "";
+    this.isConnected = false;
   }
 
-  const startConnectAndDisconnect = async () => {
-    setTestScanDevicesState('IN_PROGRESS')
-    await BLEService.initializeBLE()
-    await BLEService.scanDevices(connectAndDisconnectOnDeviceFound, [deviceTimeService])
-  }
-
-  const startConnectOnly = async () => {
-    setTestScanDevicesState('IN_PROGRESS')
-    await BLEService.initializeBLE()
-    await BLEService.scanDevices(
-      async (device: Device) => {
-        if (checkDeviceName(device)) {
-          console.info(`connecting to ${device.id}`)
-          await startConnectToDevice(device)
-          setConnectCounter(prevCount => prevCount + 1)
-          setTestScanDevicesState('DONE')
-          setDeviceId(device.id)
-        }
+  startConnectOnly = async (config: Configuration) => {
+    await BLEService.initializeBLE();
+    BLEService.scanDevices(
+      (device: Device) => {
+        console.info(`connecting to ${device.id}`);
+        this.startConnectToDevice(device, config);
       },
       [deviceTimeService]
-    )
-  }
+    );
+  };
 
-  const connectAndDiscoverOnDeviceFound = async (device: Device) => {
-    if (checkDeviceName(device)) {
-      setTestScanDevicesState('DONE')
-      setDeviceId(device.id)
-      try {
-        for (let i = 0; i < NUMBER_OF_CALLS_IN_THE_TEST_SCENARIO; i += 1) {
-          console.info(`connecting to ${device.id}`)
-          await startConnectToDevice(device)
-          setConnectCounter(prevCount => prevCount + 1)
-          console.info(`discovering in ${device.id}`)
-          await startDiscoverServices()
-          setCharacteristicDiscoverCounter(prevCount => prevCount + 1)
-        }
-        console.info('Multiple connect success')
-      } catch (error) {
-        console.error('Multiple connect error')
+  sendToHeadset = (config: Configuration) => {
+    if (!this.isConnected) {
+      this.startConnectOnly(config);
+    } else {
+      const value = JSON.stringify(config);
+      console.log("value", value, this.deviceId, this.isConnected);
+      this.sendstuff(value);
+    }
+  };
+
+  startConnectToDevice = (device: Device, config: Configuration) => {
+    BLEService.connectToDevice(device.id).then(() => {
+      this.isConnected = true;
+      console.log("isconn");
+      console.log("conn", this.isConnected);
+      this.deviceId = device.id;
+      const value = JSON.stringify(config);
+      console.log("value", value, this.deviceId, this.isConnected);
+      this.sendstuff(value);
+    });
+  };
+
+  sendstuff = async (config: string) => {
+    const d = await BLEService.discoverAllServicesAndCharacteristicsForDevice();
+    const s = await d.services();
+    console.log("services", s);
+    if (s.length > 0) {
+      console.log("id", this.deviceId);
+      const s_ID = s.find(
+        (val) => val.uuid == "37200001-7638-4216-b629-96ad40f79aa1"
+      );
+      if (s_ID) {
+        const c = await d.characteristicsForService(s_ID.uuid);
+        BLEService.writeCharacteristicWithResponseForDevice(
+          s_ID.uuid,
+          c[0].uuid,
+          Buffer.from(config).toString("base64")
+        );
       }
     }
-  }
-  const connectAndDisconnectOnDeviceFound = async (device: Device) => {
-    if (checkDeviceName(device)) {
-      setTestScanDevicesState('DONE')
-      setDeviceId(device.id)
-      try {
-        for (let i = 0; i < NUMBER_OF_CALLS_IN_THE_TEST_SCENARIO; i += 1) {
-          await startConnectToDevice(device)
-          console.info(`connecting to ${device.id}`)
-          setConnectInDisconnectTestCounter(prevCount => prevCount + 1)
-          await startDisconnect(device)
-          console.info(`disconnecting from ${device.id}`)
-          setDisconnectCounter(prevCount => prevCount + 1)
-        }
-        console.info('connect/disconnect success')
-      } catch (error) {
-        console.error('Connect/disconnect error')
-      }
-    }
-  }
-
-  const discoverCharacteristicsOnly = async () => {
-    if (!deviceId) {
-      console.error('Device not ready')
-      return
-    }
-    try {
-      for (let i = 0; i < NUMBER_OF_CALLS_IN_THE_TEST_SCENARIO; i += 1) {
-        console.info(`discovering in ${deviceId}`)
-        await startDiscoverServices()
-        setCharacteristicDiscoverCounter(prevCount => prevCount + 1)
-      }
-      console.info('Multiple discovering success')
-    } catch (error) {
-      console.error('Multiple discovering error')
-    }
-  }
-
-  const startConnectToDevice = (device: Device) => BLEService.connectToDevice(device.id)
-
-  const startDiscoverServices = () => BLEService.discoverAllServicesAndCharacteristicsForDevice()
-
-  const startDisconnect = (device: Device) => BLEService.disconnectDeviceById(device.id)
-
-  const startCharacteristicMonitor = (directDeviceId?: DeviceId) => {
-    if (!deviceId && !directDeviceId) {
-      console.error('Device not ready')
-      return
-    }
-    monitorSubscriptionRef.current = BLEService.setupCustomMonitor(
-      directDeviceId || deviceId,
-      deviceTimeService,
-      currentTimeCharacteristic,
-      characteristicListener
-    )
-  }
-
-  const characteristicListener = (error: BleError | null, characteristic: Characteristic | null) => {
-    if (error) {
-      if (error.errorCode === BleErrorCode.ServiceNotFound || error.errorCode === BleErrorCode.ServicesNotDiscovered) {
-        startDiscoverServices().then(() => startCharacteristicMonitor())
-        return
-      }
-      console.error(JSON.stringify(error))
-    }
-    if (characteristic) {
-      if (characteristic.value) {
-        const message = base64.decode(characteristic.value)
-        console.info(message)
-        addMonitorMessage(message)
-      }
-    }
-  }
-
-  const setupOnDeviceDisconnected = (directDeviceId?: DeviceId) => {
-    if (!deviceId && !directDeviceId) {
-      console.error('Device not ready')
-      return
-    }
-    BLEService.onDeviceDisconnectedCustom(directDeviceId || deviceId, disconnectedListener)
-  }
-
-  const disconnectedListener = (error: BleError | null, device: Device | null) => {
-    if (error) {
-      console.error('onDeviceDisconnected')
-      console.error(JSON.stringify(error, null, 4))
-    }
-    if (device) {
-      console.info(JSON.stringify(device, null, 4))
-    }
-  }
-
-  // https://github.com/dotintent/react-native-ble-plx/issues/1103
-  const showIssue1103Crash = async () => {
-    setTestScanDevicesState('IN_PROGRESS')
-    await BLEService.initializeBLE()
-    await BLEService.scanDevices(
-      async (device: Device) => {
-        if (checkDeviceName(device)) {
-          console.info(`connecting to ${device.id}`)
-          await startConnectToDevice(device)
-          setConnectCounter(prevCount => prevCount + 1)
-          setTestScanDevicesState('DONE')
-          setDeviceId(device.id)
-          await startDiscoverServices()
-          await wait(1000)
-          setupOnDeviceDisconnected(device.id)
-          await wait(1000)
-          startCharacteristicMonitor(device.id)
-          await wait(1000)
-          const info = 'Now disconnect device'
-          console.info(info)
-          Toast.show({
-            type: 'info',
-            text1: info
-          })
-        }
-      },
-      [deviceTimeService]
-    )
-  }
-
-  return (
-    <ScreenDefaultContainer>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <AppTextInput
-          placeholder="Device name to connect"
-          value={expectedDeviceName}
-          onChangeText={setExpectedDeviceName}
-        />
-        <AppButton label="#1103" onPress={showIssue1103Crash} />
-        <AppButton label="Just connect" onPress={startConnectOnly} />
-        <AppButton label="Setup on device disconnected" onPress={() => setupOnDeviceDisconnected()} />
-        <TestStateDisplay label="Looking for device" state={testScanDevicesState} />
-        <AppButton label="Start connect and discover" onPress={startConnectAndDiscover} />
-        <AppButton label="Discover characteristics only" onPress={discoverCharacteristicsOnly} />
-        <TestStateDisplay label="Connect counter" value={connectCounter.toString()} />
-        <TestStateDisplay label="Characteristic discover counter" value={characteristicDiscoverCounter.toString()} />
-        <AppButton label="Start connect and disconnect" onPress={startConnectAndDisconnect} />
-        <TestStateDisplay
-          label="Connect in disconnect test counter"
-          value={connectInDisconnectTestCounter.toString()}
-        />
-        <TestStateDisplay label="Disconnect counter" value={disconnectCounter.toString()} />
-        <AppButton label="Setup monitor" onPress={() => startCharacteristicMonitor()} />
-        <AppButton label="Remove monitor" onPress={monitorSubscriptionRef.current?.remove} />
-        <TestStateDisplay label="Connect in disconnect test counter" value={JSON.stringify(monitorMessages, null, 4)} />
-      </ScrollView>
-    </ScreenDefaultContainer>
-  )
+  };
 }
+
+export const BLESendService = new DeviceConnectDisconnect();

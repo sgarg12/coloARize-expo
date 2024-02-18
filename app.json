@@ -21,5 +21,8 @@
       "android.permission.BLUETOOTH_CONNECT"
     ],
     "package": "com.anonymous.coloarize"
+  },
+  "ios": {
+    "bundleIdentifier": "com.anonymous.coloarize"
   }
 }

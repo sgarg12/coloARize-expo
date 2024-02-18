@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -6,23 +6,23 @@ import {
   View,
   TextInput,
   ScrollView,
-} from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/configStack';
-import Slider from '@react-native-community/slider';
+} from "react-native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../navigation/configStack";
+import Slider from "@react-native-community/slider";
 import {
   DeuteranopiaQuizAnswerKey,
   ProtanopiaQuizAnswerKey,
   TritanopiaQuizAnswerKey,
-} from '../data/quizData';
-import ColorButton from '../components/button';
-import { useDispatch } from 'react-redux';
+} from "../data/quizData";
+import ColorButton from "../components/button";
+import { useDispatch } from "react-redux";
 import {
   addDichromacyConfiguration,
   deleteDichromacyConfiguration,
   editDichromacyConfiguration,
-} from '../redux/actions';
-import { store } from '../redux/store';
+} from "../redux/actions";
+import { store } from "../redux/store";
 import {
   Configuration,
   AlgorithmType,
@@ -34,24 +34,24 @@ import {
   SimulatorConfig,
   SimulatorRemapConfig,
   ConfigurationState,
-} from '../redux/types';
-import Checkbox from 'expo-checkbox';
-import * as GL from 'expo-gl';
-import { GLView } from 'expo-gl';
+} from "../redux/types";
+import Checkbox from "expo-checkbox";
+import * as GL from "expo-gl";
+import { GLView } from "expo-gl";
 import {
   applyShaders,
   initParams,
   updateParams,
-} from '../rendering/renderHelpers';
-import { Asset } from 'expo-asset';
-import { useSelector } from 'react-redux';
+} from "../rendering/renderHelpers";
+import { Asset } from "expo-asset";
+import { BLESendService } from "./BLEView";
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Config'>;
+type Props = NativeStackScreenProps<RootStackParamList, "Config">;
 
 const get_image = (type: DichromacyType, index: number) => {
-  if (type == 'Protanopia') {
+  if (type == "Protanopia") {
     return ProtanopiaQuizAnswerKey[index].image;
-  } else if (type == 'Deuteranopia') {
+  } else if (type == "Deuteranopia") {
     return DeuteranopiaQuizAnswerKey[index].image;
   } else {
     return TritanopiaQuizAnswerKey[index].image;
@@ -68,7 +68,7 @@ export const create_new_config = (
   old_config: Configuration | null
 ): any => {
   const config_len = store.getState().configurations.length;
-  const default_new_name = 'config_' + (config_len + 1).toString();
+  const default_new_name = "config_" + (config_len + 1).toString();
 
   let base_params: BaseParams =
     old_config != null
@@ -84,11 +84,11 @@ export const create_new_config = (
   let default_param: DefaultParams | null = null;
   let sim_params: SimulationParams | null = null;
 
-  if (alg_type == 'Default' || alg_type == 'SimulationRemap') {
+  if (alg_type == "Default" || alg_type == "SimulationRemap") {
     default_param =
       old_config != null &&
-      (old_config.AlgorithmType == 'Default' ||
-        old_config.AlgorithmType == 'SimulationRemap')
+      (old_config.AlgorithmType == "Default" ||
+        old_config.AlgorithmType == "SimulationRemap")
         ? {
             Phi: (old_config as DefaultParams).Phi,
             HueShift: (old_config as DefaultParams).HueShift,
@@ -99,11 +99,11 @@ export const create_new_config = (
           };
   }
 
-  if (alg_type == 'Simulation' || alg_type == 'SimulationRemap') {
+  if (alg_type == "Simulation" || alg_type == "SimulationRemap") {
     sim_params =
       old_config != null &&
-      (old_config.AlgorithmType == 'Simulation' ||
-        old_config.AlgorithmType == 'SimulationRemap')
+      (old_config.AlgorithmType == "Simulation" ||
+        old_config.AlgorithmType == "SimulationRemap")
         ? {
             Severity: (old_config as SimulationParams).Severity,
           }
@@ -131,9 +131,9 @@ const ConfigurationView = ({ route, navigation }: Props) => {
     text_header: {
       fontSize: 20,
       lineHeight: 21,
-      fontWeight: 'bold',
+      fontWeight: "bold",
       letterSpacing: 0.25,
-      textAlign: 'center',
+      textAlign: "center",
       marginTop: 10,
     },
   });
@@ -182,8 +182,8 @@ const ConfigurationView = ({ route, navigation }: Props) => {
   let flag_simulate_init = false;
   if (rparams.config != null) {
     const t = rparams.config.AlgorithmType;
-    flag_remap_init = t == 'Default' || t == 'SimulationRemap';
-    flag_simulate_init = t == 'Simulation' || t == 'SimulationRemap';
+    flag_remap_init = t == "Default" || t == "SimulationRemap";
+    flag_simulate_init = t == "Simulation" || t == "SimulationRemap";
   }
 
   const [flag_remap, set_flag_remap] = useState(flag_remap_init);
@@ -194,10 +194,10 @@ const ConfigurationView = ({ route, navigation }: Props) => {
     simulate: boolean
   ): AlgorithmType => {
     let ret: AlgorithmType;
-    if (remap && simulate) ret = 'SimulationRemap';
-    else if (remap && !simulate) ret = 'Default';
-    else if (!remap && simulate) ret = 'Simulation';
-    else ret = 'Default';
+    if (remap && simulate) ret = "SimulationRemap";
+    else if (remap && !simulate) ret = "Default";
+    else if (!remap && simulate) ret = "Simulation";
+    else ret = "Default";
     return ret;
   };
 
@@ -209,19 +209,23 @@ const ConfigurationView = ({ route, navigation }: Props) => {
     )
   );
   const [run_dispatch, set_run_dispatch] = useState<
-    'Add' | 'Edit' | 'Delete' | ''
-  >('');
+    "Add" | "Edit" | "Delete" | ""
+  >("");
+
+  const sendToHeadset = () => {
+    BLESendService.sendToHeadset(new_config);
+  };
 
   useEffect(() => {
-    if (run_dispatch === 'Add') {
+    if (run_dispatch === "Add") {
       dispatch(addDichromacyConfiguration(new_config));
-      navigation.navigate('PastConfigs');
-    } else if (run_dispatch == 'Edit') {
+      navigation.navigate("PastConfigs");
+    } else if (run_dispatch == "Edit") {
       dispatch(editDichromacyConfiguration(new_config, old_name as string));
-      navigation.navigate('PastConfigs');
-    } else if (run_dispatch == 'Delete') {
+      navigation.navigate("PastConfigs");
+    } else if (run_dispatch == "Delete") {
       dispatch(deleteDichromacyConfiguration(old_name as string));
-      navigation.navigate('PastConfigs');
+      navigation.navigate("PastConfigs");
     }
   }, [run_dispatch]);
 
@@ -230,15 +234,15 @@ const ConfigurationView = ({ route, navigation }: Props) => {
       view_images: {
         // color: '#FFFFFF',
         // backgroundColor: '#724DC6',
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        alignItems: 'center',
+        flexDirection: "row",
+        justifyContent: "space-around",
+        alignItems: "center",
         // marginVertical: 0,
       },
       image: {
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
       },
     });
 
@@ -253,7 +257,7 @@ const ConfigurationView = ({ route, navigation }: Props) => {
             style={{
               width: 180,
               height: 180,
-              transform: [{ rotateY: '180deg' }],
+              transform: [{ rotateY: "180deg" }],
             }}
             onContextCreate={onContextCreate}
           />
@@ -314,7 +318,7 @@ const ConfigurationView = ({ route, navigation }: Props) => {
                 maximumValue={1.0}
                 value={(new_config as DefaultConfig | SimulatorRemapConfig).Phi}
                 onValueChange={(slideValue) => {
-                  if (new_config.AlgorithmType !== 'Simulation') {
+                  if (new_config.AlgorithmType !== "Simulation") {
                     set_new_config({
                       ...new_config,
                       Phi: slideValue,
@@ -337,7 +341,7 @@ const ConfigurationView = ({ route, navigation }: Props) => {
                   (new_config as DefaultConfig | SimulatorRemapConfig).HueShift
                 }
                 onValueChange={(slideValue) => {
-                  if (new_config.AlgorithmType !== 'Simulation') {
+                  if (new_config.AlgorithmType !== "Simulation") {
                     set_new_config({
                       ...new_config,
                       HueShift: slideValue,
@@ -373,13 +377,13 @@ const ConfigurationView = ({ route, navigation }: Props) => {
                 updateParams({ severity: 0.0, simType: 0 });
               } else {
                 switch (rparams.dichromacy_type) {
-                  case 'Protanopia':
+                  case "Protanopia":
                     updateParams({ simType: 1 });
                     break;
-                  case 'Deuteranopia':
+                  case "Deuteranopia":
                     updateParams({ simType: 2 });
                     break;
-                  case 'Tritanopia':
+                  case "Tritanopia":
                     updateParams({ simType: 3 });
                     break;
                 }
@@ -401,7 +405,7 @@ const ConfigurationView = ({ route, navigation }: Props) => {
                     .Severity
                 }
                 onValueChange={(slideValue) => {
-                  if (new_config.AlgorithmType !== 'Default') {
+                  if (new_config.AlgorithmType !== "Default") {
                     set_new_config({
                       ...new_config,
                       Severity: slideValue,
@@ -428,11 +432,12 @@ const ConfigurationView = ({ route, navigation }: Props) => {
         <View>
           <ColorButton
             onPress={() => {
-              set_run_dispatch('Add');
+              set_run_dispatch("Add");
+              sendToHeadset();
             }}
             title="Create"
-            color={'#FFFFFF'}
-            backgroundColour={'#724DC6'}
+            color={"#FFFFFF"}
+            backgroundColour={"#724DC6"}
             disabled={isDisabled}
           />
           {isDisabled && (
@@ -453,20 +458,28 @@ const ConfigurationView = ({ route, navigation }: Props) => {
         <View style={style.buttons}>
           <ColorButton
             onPress={() => {
-              set_run_dispatch('Edit');
+              set_run_dispatch("Edit");
             }}
             title="Save"
-            color={'#FFFFFF'}
-            backgroundColour={'#724DC6'}
+            color={"#FFFFFF"}
+            backgroundColour={"#724DC6"}
             disabled={isDisabled}
           />
           <ColorButton
             onPress={() => {
-              set_run_dispatch('Delete');
+              set_run_dispatch("Delete");
             }}
             title="Delete"
-            color={'#FFFFFF'}
-            backgroundColour={'#FF6B6B'}
+            color={"#FFFFFF"}
+            backgroundColour={"#FF6B6B"}
+          />
+          <ColorButton
+            onPress={() => {
+              sendToHeadset();
+            }}
+            title="Apply to Headset"
+            color={"#FFFFFF"}
+            backgroundColour={"#FF6B6B"}
           />
           {isDisabled && (
             <Text style={styles_input.error_text}>
@@ -480,15 +493,15 @@ const ConfigurationView = ({ route, navigation }: Props) => {
 
   let screen;
   if (
-    new_config.AlgorithmType == 'Default' ||
-    new_config.AlgorithmType == 'Simulation' ||
-    new_config.AlgorithmType == 'SimulationRemap'
+    new_config.AlgorithmType == "Default" ||
+    new_config.AlgorithmType == "Simulation" ||
+    new_config.AlgorithmType == "SimulationRemap"
   ) {
     screen = (
       <ScrollView>
         <View>
           <Text style={styles.text_header}>{rparams.dichromacy_type}</Text>
-          {renderImages('Remapped Image')}
+          {renderImages("Remapped Image")}
           {renderInputsDefault()}
           {renderActions()}
         </View>
@@ -521,8 +534,8 @@ const styles_input = StyleSheet.create({
   },
 
   checkbox_container: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "flex-start",
     marginHorizontal: 10,
     marginVertical: 10,
   },
@@ -535,8 +548,8 @@ const styles_input = StyleSheet.create({
   },
   error_text: {
     fontSize: 14,
-    color: '#E75858',
-    textAlign: 'center',
+    color: "#E75858",
+    textAlign: "center",
   },
 });
 

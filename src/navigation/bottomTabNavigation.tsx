@@ -75,7 +75,7 @@ export const BottomTabNav = () => {
           tabBarIcon: () => <FontAwesomeIcon icon={faGear} color={"#FFFFFF"} />,
         }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name={"DEVICE_CONNECT_DISCONNECT_TEST_SCREEN"}
         component={DeviceConnectDisconnectTestScreen}
         options={{
@@ -83,7 +83,7 @@ export const BottomTabNav = () => {
           tabBarLabel: "BLE",
           tabBarIcon: () => <FontAwesomeIcon icon={faGear} color={"#FFFFFF"} />,
         }}
-      />
+      /> */}
     </Tab.Navigator>
   );
 };
