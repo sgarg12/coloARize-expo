@@ -7,7 +7,12 @@ import {
 } from "../redux/types";
 import { Float } from "react-native/Libraries/Types/CodegenTypes";
 
-export type RenderParams = {phi?: Float, hue?: Float, simType?: number, severity?: Float};
+export type RenderParams = {
+  phi?: Float;
+  hue?: Float;
+  simType?: number;
+  severity?: Float;
+};
 
 export var phi: Float = 1.0;
 export var hue: Float = 0.0;
@@ -50,20 +55,24 @@ export function initParams(params: Configuration) {
 
 export function updateParams(params: RenderParams) {
   if (params.phi !== undefined) {
-    phi = params.phi
+    phi = params.phi;
   }
   if (params.hue !== undefined) {
-    hue = params.hue
+    hue = params.hue;
   }
   if (params.simType !== undefined) {
-    simType = params.simType
+    simType = params.simType;
   }
   if (params.severity !== undefined) {
-    severity = params.severity
+    severity = params.severity;
   }
 }
 
-export const applyShaders = (gl: GL.ExpoWebGLRenderingContext, texture: WebGLTexture, setRafID:(callback: () => number) => void) => {
+export const applyShaders = (
+  gl: GL.ExpoWebGLRenderingContext,
+  texture: WebGLTexture,
+  setRafID: (callback: () => number) => void
+) => {
   // Compile vertex and fragment shaders
   const vertShader = gl.createShader(gl.VERTEX_SHADER)!;
   gl.shaderSource(vertShader, vertShaderSource);
@@ -102,7 +111,9 @@ export const applyShaders = (gl: GL.ExpoWebGLRenderingContext, texture: WebGLTex
 
   // Render loop
   const loop = () => {
-    const rafCallback = () => {return requestAnimationFrame(loop)};
+    const rafCallback = () => {
+      return requestAnimationFrame(loop);
+    };
     setRafID(rafCallback);
 
     // Clear
@@ -125,9 +136,8 @@ export const applyShaders = (gl: GL.ExpoWebGLRenderingContext, texture: WebGLTex
     // Submit frame
     gl.endFrameEXP();
   };
-  
   loop();
-}
+};
 
 export const vertShaderSource = `#version 300 es
 precision highp float;
@@ -319,7 +329,7 @@ vec3 remapColour(vec3 rgb, float hue_shift, float phi) {
   // // remap hue
   new_hue = new_hue + hue_shift;
   new_hue = new_hue - floor(new_hue);
-  new_hue = pow(new_hue, phi);
+  new_hue = pow(new_hue, 1.0 - phi);
   new_hue = new_hue + 1.0f - hue_shift;
   new_hue = new_hue - floor(new_hue);
 

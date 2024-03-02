@@ -35,6 +35,7 @@ import {
   SimulatorRemapConfig,
   ConfigurationState,
 } from "../redux/types";
+import { SliderBox } from "react-native-image-slider-box";
 import Checkbox from "expo-checkbox";
 import * as GL from "expo-gl";
 import { GLView } from "expo-gl";
@@ -56,6 +57,24 @@ const get_image = (type: DichromacyType, index: number) => {
   } else {
     return TritanopiaQuizAnswerKey[index].image;
   }
+};
+
+const get_images = (type: DichromacyType) => {
+  let images = [];
+  if (type == "Protanopia") {
+    for (let index = 0; index < ProtanopiaQuizAnswerKey.length; index++) {
+      images.push(ProtanopiaQuizAnswerKey[index].image);
+    }
+  } else if (type == "Deuteranopia") {
+    for (let index = 0; index < DeuteranopiaQuizAnswerKey.length; index++) {
+      images.push(DeuteranopiaQuizAnswerKey[index].image);
+    }
+  } else {
+    for (let index = 0; index < TritanopiaQuizAnswerKey.length; index++) {
+      images.push(TritanopiaQuizAnswerKey[index].image);
+    }
+  }
+  return images;
 };
 
 const getRandomIndex = (length: number) => {
@@ -121,10 +140,13 @@ export const create_new_config = (
 };
 
 const ConfigurationView = ({ route, navigation }: Props) => {
-  const [index, setIndex] = useState(getRandomIndex(15));
+  const [index, setIndex] = useState(0);
+  const [enableGL, setEnableGL] = useState(true);
 
   const rparams = route.params;
   const image = get_image(rparams.dichromacy_type, index);
+
+  const images = get_images(rparams.dichromacy_type);
 
   const old_name = rparams.config == null ? null : rparams.config.Name;
   const styles = StyleSheet.create({
@@ -147,7 +169,9 @@ const ConfigurationView = ({ route, navigation }: Props) => {
   }, [_rafID]);
 
   const onContextCreate = async (gl: GL.ExpoWebGLRenderingContext) => {
-    var imageAsset = Asset.fromModule(image.valueOf() as any);
+    var imageAsset = Asset.fromModule(
+      get_image(rparams.dichromacy_type, index).valueOf() as any
+    );
     await imageAsset.downloadAsync();
 
     const imageTexture = gl.createTexture();
@@ -234,33 +258,56 @@ const ConfigurationView = ({ route, navigation }: Props) => {
       view_images: {
         // color: '#FFFFFF',
         // backgroundColor: '#724DC6',
-        flexDirection: "row",
+        flexDirection: "column",
         justifyContent: "space-around",
         alignItems: "center",
+        paddingTop: 15,
         // marginVertical: 0,
       },
       image: {
+        paddingTop: 30,
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
+      },
+      slider: {
+        height: 200,
+      },
+      caption: {
+        justifyContent: "center",
       },
     });
 
     return (
       <View style={styles.view_images}>
-        <View style={styles.image}>
-          <Image source={image} />
-          <Text style={{ marginVertical: 5 }}> Original Image </Text>
-        </View>
-        <View style={styles.image}>
-          <GLView
-            style={{
-              width: 180,
-              height: 180,
-              transform: [{ rotateY: "180deg" }],
+        <View style={styles.slider}>
+          <SliderBox
+            images={images}
+            currentImageEmitter={(index: number) => {
+              setIndex(index);
+              setEnableGL(false);
+              setTimeout(() => {
+                setEnableGL(true);
+              }, 50);
             }}
-            onContextCreate={onContextCreate}
+            parentWidth={180}
+            sliderBoxHeight={180}
+            inactiveDotColor={"#724DC6"}
           />
+        </View>
+        <Text style={styles.caption}>Original Image</Text>
+        <View style={styles.image}>
+          {enableGL && (
+            <GLView
+              style={{
+                width: 180,
+                height: 180,
+                transform: [{ rotateY: "180deg" }],
+              }}
+              onContextCreate={onContextCreate}
+            />
+          )}
+
           <Text style={{ marginVertical: 5 }}> {label_2} </Text>
         </View>
       </View>
@@ -311,7 +358,9 @@ const ConfigurationView = ({ route, navigation }: Props) => {
         {flag_remap && (
           <>
             <View style={styles_input.sliders}>
-              <Text style={styles_input.input_label}>Phi</Text>
+              <Text style={styles_input.input_label}>
+                Correctional Severity
+              </Text>
               <Slider
                 step={0.001}
                 minimumValue={0.0}
@@ -479,7 +528,7 @@ const ConfigurationView = ({ route, navigation }: Props) => {
             }}
             title="Apply to Headset"
             color={"#FFFFFF"}
-            backgroundColour={"#FF6B6B"}
+            backgroundColour={"#3836C9"}
           />
           {isDisabled && (
             <Text style={styles_input.error_text}>

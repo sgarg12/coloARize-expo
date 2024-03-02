@@ -12,7 +12,7 @@ import {
   type Base64,
   type Subscription,
 } from "react-native-ble-plx";
-import { PermissionsAndroid, Platform } from "react-native";
+import { Alert, PermissionsAndroid, Platform } from "react-native";
 import Toast from "react-native-toast-message";
 
 const deviceNotConnectedErrorText = "Device is not connected";
@@ -40,6 +40,7 @@ class BLEServiceInstance {
       const subscription = this.manager.onStateChange((state) => {
         switch (state) {
           case BluetoothState.Unsupported:
+            Alert.alert("Bluetooth unsupported");
             this.showErrorToast("");
             break;
           case BluetoothState.PoweredOff:
@@ -54,7 +55,6 @@ class BLEServiceInstance {
             this.requestBluetoothPermission();
             break;
           case BluetoothState.PoweredOn:
-            console.log("2");
             resolve();
             subscription.remove();
             break;
@@ -90,7 +90,8 @@ class BLEServiceInstance {
       });
 
   onBluetoothPowerOff = () => {
-    this.showErrorToast("Bluetooth is turned off");
+    //this.showErrorToast("Bluetooth is turned off");
+    Alert.alert("Bluetooth is turned off");
   };
 
   scanDevices = async (
@@ -98,9 +99,7 @@ class BLEServiceInstance {
     UUIDs: UUID[] | null = null,
     legacyScan?: boolean
   ) => {
-    console.log("3");
     this.manager.startDeviceScan(["FEB8"], { legacyScan }, (error, device) => {
-      console.log("hereee");
       if (error) {
         this.onError(error);
         console.error(error.message);
@@ -110,22 +109,18 @@ class BLEServiceInstance {
       if (device) {
         console.log(device.serviceUUIDs);
         console.log("device found");
-
         onDeviceFound(device);
       }
     });
-    console.log("here 2");
   };
 
   connectToDevice = (deviceId: DeviceId) =>
     new Promise<Device>((resolve, reject) => {
       this.manager.stopDeviceScan();
-      console.log("scanned");
       this.manager
         .connectToDevice(deviceId)
         .then((device) => {
           this.device = device;
-          console.log("then", this.device.id);
           resolve(device);
         })
         .catch((error) => {
@@ -145,6 +140,7 @@ class BLEServiceInstance {
     new Promise<Device>((resolve, reject) => {
       if (!this.device) {
         this.showErrorToast(deviceNotConnectedErrorText);
+        Alert.alert("Bluetooth device is not connected");
         reject(new Error(deviceNotConnectedErrorText));
         return;
       }
@@ -156,6 +152,7 @@ class BLEServiceInstance {
         })
         .catch((error) => {
           this.onError(error);
+          Alert.alert("Bluetooth connection failed");
           reject(error);
         });
     });
@@ -167,6 +164,7 @@ class BLEServiceInstance {
     new Promise<Characteristic>((resolve, reject) => {
       if (!this.device) {
         this.showErrorToast(deviceNotConnectedErrorText);
+        Alert.alert("Device is not connected");
         reject(new Error(deviceNotConnectedErrorText));
         return;
       }
@@ -191,6 +189,7 @@ class BLEServiceInstance {
   ) => {
     if (!this.device) {
       this.showErrorToast(deviceNotConnectedErrorText);
+      Alert.alert("Bluetooth device not connected");
       throw new Error(deviceNotConnectedErrorText);
     }
     return this.manager
@@ -201,6 +200,7 @@ class BLEServiceInstance {
         time
       )
       .catch((error) => {
+        Alert.alert(error);
         this.onError(error);
       });
   };
@@ -443,10 +443,12 @@ class BLEServiceInstance {
         this.requestBluetoothPermission();
         break;
       case BleErrorCode.LocationServicesDisabled:
-        this.showErrorToast("Location services are disabled");
+        //this.showErrorToast("Location services are disabled");
+        Alert.alert("Location services are disabled");
         break;
       default:
-        this.showErrorToast(JSON.stringify(error, null, 4));
+        Alert.alert("Bluetooth connection failed");
+      //this.showErrorToast(JSON.stringify(error, null, 4));
     }
   };
 

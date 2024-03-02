@@ -13,7 +13,12 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import Slider from "@react-native-community/slider";
 import { useDispatch } from "react-redux";
 import { editDichromacyConfiguration } from "../redux/actions";
-import { phi, applyShaders, initParams, updateParams } from "../rendering/renderHelpers";
+import {
+  phi,
+  applyShaders,
+  initParams,
+  updateParams,
+} from "../rendering/renderHelpers";
 
 type Props = NativeStackScreenProps<CameraStackParamList, "Camera">;
 
@@ -46,11 +51,11 @@ const CameraView = ({ route, navigation }: Props) => {
     texture = await createCameraTexture();
     const cameraTexture = texture;
 
-    const setRafID = (callback:() => number) => {
-      _rafID = callback()
-    }
+    const setRafID = (callback: () => number) => {
+      _rafID = callback();
+    };
 
-    initParams(route.params)
+    initParams(route.params);
     applyShaders(gl, cameraTexture, setRafID);
   };
 
@@ -90,7 +95,7 @@ const CameraView = ({ route, navigation }: Props) => {
             maximumValue={1.0}
             value={route.params.Phi}
             onValueChange={(sliderValue) => {
-              updateParams({phi:sliderValue})
+              updateParams({ phi: sliderValue });
             }}
             minimumTrackTintColor="#C6ADFF"
             maximumTrackTintColor="#d3d3d3"

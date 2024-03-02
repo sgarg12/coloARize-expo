@@ -3,6 +3,7 @@ import { BleManager, Device, Service } from "react-native-ble-plx";
 import { BLEService } from "../services/BLEService";
 import { deviceTimeService } from "../data/nRFDeviceConsts";
 import { Configuration } from "../redux/types";
+import { Alert } from "react-native";
 
 class DeviceConnectDisconnect {
   deviceId: string;
@@ -14,6 +15,7 @@ class DeviceConnectDisconnect {
   }
 
   startConnectOnly = async (config: Configuration) => {
+    console.log("bluetooth connection process started:", Date.now());
     await BLEService.initializeBLE();
     BLEService.scanDevices(
       (device: Device) => {
@@ -29,7 +31,7 @@ class DeviceConnectDisconnect {
       this.startConnectOnly(config);
     } else {
       const value = JSON.stringify(config);
-      console.log("value", value, this.deviceId, this.isConnected);
+      console.log("sending to headset", value, this.deviceId, Date.now());
       this.sendstuff(value);
     }
   };
@@ -37,11 +39,8 @@ class DeviceConnectDisconnect {
   startConnectToDevice = (device: Device, config: Configuration) => {
     BLEService.connectToDevice(device.id).then(() => {
       this.isConnected = true;
-      console.log("isconn");
-      console.log("conn", this.isConnected);
       this.deviceId = device.id;
       const value = JSON.stringify(config);
-      console.log("value", value, this.deviceId, this.isConnected);
       this.sendstuff(value);
     });
   };
@@ -49,7 +48,6 @@ class DeviceConnectDisconnect {
   sendstuff = async (config: string) => {
     const d = await BLEService.discoverAllServicesAndCharacteristicsForDevice();
     const s = await d.services();
-    console.log("services", s);
     if (s.length > 0) {
       console.log("id", this.deviceId);
       const s_ID = s.find(
@@ -57,11 +55,15 @@ class DeviceConnectDisconnect {
       );
       if (s_ID) {
         const c = await d.characteristicsForService(s_ID.uuid);
-        BLEService.writeCharacteristicWithResponseForDevice(
+        const res = BLEService.writeCharacteristicWithResponseForDevice(
           s_ID.uuid,
           c[0].uuid,
           Buffer.from(config).toString("base64")
         );
+        res.then(() => {
+          Alert.alert("Configuration sent");
+          console.log("config sent at", Date.now());
+        });
       }
     }
   };
