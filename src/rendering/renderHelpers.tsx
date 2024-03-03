@@ -6,6 +6,7 @@ import {
   SimulatorRemapConfig,
 } from "../redux/types";
 import { Float } from "react-native/Libraries/Types/CodegenTypes";
+import { Dimensions } from "react-native";
 
 export type RenderParams = {
   phi?: Float;
@@ -109,6 +110,14 @@ export const applyShaders = (
   // Activate unit 0
   gl.activeTexture(gl.TEXTURE0);
 
+  // gl.texParameteri(gl.TEXTURE_2D, )
+  // int w, h;
+  // int miplevel = 0;
+  // gl.getTexParameter(gl.TEXTURE_2D, )
+  // console.log("width: " + texture.width);
+  // glGetTexLevelParameteriv(GL_TEXTURE_2D, miplevel, GL_TEXTURE_WIDTH, &w);
+  // glGetTexLevelParameteriv(GL_TEXTURE_2D, miplevel, GL_TEXTURE_HEIGHT, &h);
+
   // Render loop
   const loop = () => {
     const rafCallback = () => {
@@ -125,7 +134,34 @@ export const applyShaders = (
     gl.uniform1f(gl.getUniformLocation(program, "phi"), phi);
     gl.uniform1f(gl.getUniformLocation(program, "severity"), severity);
     gl.uniform1f(gl.getUniformLocation(program, "hue_shift"), hue);
+
+    let width = Dimensions.get("window").width;
+    let height = Dimensions.get("window").height;
+    console.log("Width: ", width, " Height: ", height);
+
+    gl.uniform1f(gl.getUniformLocation(program, "kernel_off_x"), 1.0 / width);
+    gl.uniform1f(gl.getUniformLocation(program, "kernel_off_y"), 1.0 / height);
+
     gl.uniform1i(gl.getUniformLocation(program, "simType"), simType);
+
+    let kernel = new Float32Array([
+      -1.0, 0.0, 1.0, -2.0, 0.0, 2.0, -1.0, 0.0, 1.0,
+      // 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+    ]);
+    let kernel_2 = new Float32Array([
+      -1.0, -2.0, -1.0, 0.0, 0.0, 0.0, 1.0, 2.0, 1.0,
+      // 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+    ]);
+    gl.uniformMatrix3fv(
+      gl.getUniformLocation(program, "kernel"),
+      false,
+      kernel
+    );
+    gl.uniformMatrix3fv(
+      gl.getUniformLocation(program, "kernel"),
+      false,
+      kernel_2
+    );
 
     // Bind texture if created
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -152,6 +188,11 @@ void main() {
 
 export const fragShaderSource = `#version 300 es
 precision highp float;
+uniform mat3 kernel;
+uniform mat3 kernel_2;
+
+uniform float kernel_off_x;
+uniform float kernel_off_y;
 
 uniform sampler2D textureSource;
 uniform float hue_shift;
@@ -339,8 +380,47 @@ vec3 remapColour(vec3 rgb, float hue_shift, float phi) {
   return fixed_rgb;
 }
 
+
+vec3 edge_detection() {
+  vec2 offset_x = vec2(kernel_off_x, 0.0);
+  vec2 offset_y = vec2(0.0, kernel_off_y);
+
+  // top
+  vec3 rgb_1 = texture(textureSource, uv + offset_y - offset_x).rgb;
+  vec3 rgb_2 = texture(textureSource, uv + offset_y).rgb;
+  vec3 rgb_3 = texture(textureSource, uv + offset_y + offset_x).rgb;
+
+  vec3 rgb_4 = texture(textureSource, uv - offset_x).rgb;
+  vec3 rgb_5 = texture(textureSource, uv).rgb;
+  vec3 rgb_6 = texture(textureSource, uv + offset_x).rgb;
+
+  vec3 rgb_7 = texture(textureSource, uv - offset_y - offset_x).rgb;
+  vec3 rgb_8 = texture(textureSource, uv - offset_y).rgb;
+  vec3 rgb_9 = texture(textureSource, uv - offset_y + offset_x).rgb;
+
+
+  // kernel[col][row]
+  vec3 result_1 = kernel[0][0] * rgb_1 + kernel[1][0] * rgb_2 + kernel[2][0] * rgb_3 +
+  kernel[0][1] * rgb_4 + kernel[1][1] * rgb_5 + kernel[2][1] * rgb_6 +
+  kernel[0][2] * rgb_7 + kernel[1][2] * rgb_8 + kernel[2][2] * rgb_9;
+
+  vec3 result_2 = kernel_2[0][0] * rgb_1 + kernel_2[1][0] * rgb_2 + kernel_2[2][0] * rgb_3 +
+  kernel_2[0][1] * rgb_4 + kernel_2[1][1] * rgb_5 + kernel_2[2][1] * rgb_6 +
+  kernel_2[0][2] * rgb_7 + kernel_2[1][2] * rgb_8 + kernel_2[2][2] * rgb_9;
+  
+  float conv_1 = (result_1.x + result_1.y + result_1.z) / 3.0;
+  float conv_2 = (result_2.x + result_2.y + result_2.z) / 3.0;
+  float res = 2.0f * sqrt(conv_1 * conv_1 + conv_2 * conv_2);
+
+  vec3 edge_color = clamp(vec3(res, res, res), 0.0, 1.0);
+  return rgb_5 + edge_color;
+
+  // return clamp(vec3(2.0, 0.0, 0.0), 0.0, 1.0);
+
+}
+
 void main() {
-  vec3 rgb = texture(textureSource, uv).rgb;
+  // vec3 rgb = texture(textureSource, uv).rgb;
 
   // other possible in parameters
   // float hue_min = 0.0;
@@ -348,7 +428,8 @@ void main() {
   // float phi_min = 0.3;
   // float phi_max = 0.9;
 
-  vec3 fixed_rgb = remapColour(rgb, hue_shift, phi);
+  //vec3 fixed_rgb = remapColour(rgb, hue_shift, phi);
 
-  fragColor = vec4(simColourBlind(simType, fixed_rgb, severity), 1.0);
+  //fragColor = vec4(simColourBlind(simType, fixed_rgb, severity), 1.0);
+  fragColor = vec4(edge_detection(), 1.0);
 }`;
