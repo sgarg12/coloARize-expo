@@ -13,12 +13,15 @@ export type RenderParams = {
   hue?: Float;
   simType?: number;
   severity?: Float;
+  EdgeDetection?: number;
 };
 
 export var phi: Float = 1.0;
 export var hue: Float = 0.0;
 export var simType: number = 0;
 export var severity: Float = 0.9;
+export var edgeDetection: number = 0;
+export var isCameraView: number = 1;
 
 export function initParams(params: Configuration) {
   const { AlgorithmType } = params;
@@ -52,6 +55,8 @@ export function initParams(params: Configuration) {
       simType = 3;
     }
   }
+
+  edgeDetection = params.EdgeDetection;
 }
 
 export function updateParams(params: RenderParams) {
@@ -67,14 +72,19 @@ export function updateParams(params: RenderParams) {
   if (params.severity !== undefined) {
     severity = params.severity;
   }
+  if (params.EdgeDetection !== undefined) {
+    edgeDetection = params.EdgeDetection;
+  }
 }
 
 export const applyShaders = (
   gl: GL.ExpoWebGLRenderingContext,
   texture: WebGLTexture,
+  isCamera: number,
   setRafID: (callback: () => number) => void
 ) => {
   // Compile vertex and fragment shaders
+  isCameraView = isCamera;
   const vertShader = gl.createShader(gl.VERTEX_SHADER)!;
   gl.shaderSource(vertShader, vertShaderSource);
   gl.compileShader(vertShader);
@@ -134,10 +144,15 @@ export const applyShaders = (
     gl.uniform1f(gl.getUniformLocation(program, "phi"), phi);
     gl.uniform1f(gl.getUniformLocation(program, "severity"), severity);
     gl.uniform1f(gl.getUniformLocation(program, "hue_shift"), hue);
+    gl.uniform1i(
+      gl.getUniformLocation(program, "edgeDetection"),
+      edgeDetection
+    );
+    gl.uniform1i(gl.getUniformLocation(program, "isCameraView"), isCameraView);
 
     let width = Dimensions.get("window").width;
     let height = Dimensions.get("window").height;
-    console.log("Width: ", width, " Height: ", height);
+    //console.log("Width: ", width, " Height: ", height);
 
     gl.uniform1f(gl.getUniformLocation(program, "kernel_off_x"), 1.0 / width);
     gl.uniform1f(gl.getUniformLocation(program, "kernel_off_y"), 1.0 / height);
@@ -199,6 +214,8 @@ uniform float hue_shift;
 uniform float phi;
 uniform int simType;
 uniform float severity;
+uniform int edgeDetection;
+uniform int isCameraView;
 in vec2 uv;
 out vec4 fragColor;
 
@@ -413,23 +430,25 @@ vec3 edge_detection() {
   float res = 2.0f * sqrt(conv_1 * conv_1 + conv_2 * conv_2);
 
   vec3 edge_color = clamp(vec3(res, res, res), 0.0, 1.0);
-  return rgb_5 + edge_color;
+  return edge_color;
 
   // return clamp(vec3(2.0, 0.0, 0.0), 0.0, 1.0);
 
 }
 
 void main() {
-  // vec3 rgb = texture(textureSource, uv).rgb;
+  vec3 rgb = texture(textureSource, uv).rgb;
+  vec3 fixed_rgb = remapColour(rgb, hue_shift, phi);
 
-  // other possible in parameters
-  // float hue_min = 0.0;
-  // float hue_max = 150.0;
-  // float phi_min = 0.3;
-  // float phi_max = 0.9;
-
-  //vec3 fixed_rgb = remapColour(rgb, hue_shift, phi);
-
-  //fragColor = vec4(simColourBlind(simType, fixed_rgb, severity), 1.0);
-  fragColor = vec4(edge_detection(), 1.0);
+  vec3 sim_remap_color = simColourBlind(simType, fixed_rgb, severity);
+  vec3 final_color;
+  if (edgeDetection == 1 && isCameraView == 1) {
+    vec3 edges = edge_detection();
+    final_color = sim_remap_color + edges;
+  } else {
+    final_color = sim_remap_color;
+  }
+  
+  fragColor = vec4(clamp(final_color, 0.0, 1.0), 1.0);
+  
 }`;

@@ -84,7 +84,8 @@ const getRandomIndex = (length: number) => {
 export const create_new_config = (
   alg_type: AlgorithmType,
   d_type: DichromacyType,
-  old_config: Configuration | null
+  old_config: Configuration | null,
+  edge_detection: number
 ): any => {
   const config_len = store.getState().configurations.length;
   const default_new_name = "config_" + (config_len + 1).toString();
@@ -94,10 +95,12 @@ export const create_new_config = (
       ? {
           Name: old_config.Name,
           DichromacyType: old_config.DichromacyType,
+          EdgeDetection: edge_detection,
         }
       : {
           Name: default_new_name,
           DichromacyType: d_type,
+          EdgeDetection: edge_detection,
         };
 
   let default_param: DefaultParams | null = null;
@@ -196,7 +199,7 @@ const ConfigurationView = ({ route, navigation }: Props) => {
     initParams(new_config);
 
     if (imageTexture != null) {
-      applyShaders(gl, imageTexture, setRafID);
+      applyShaders(gl, imageTexture, 0, setRafID);
     }
   };
 
@@ -204,14 +207,19 @@ const ConfigurationView = ({ route, navigation }: Props) => {
 
   let flag_remap_init = true;
   let flag_simulate_init = false;
+  let flag_edge_detection_init = 0;
   if (rparams.config != null) {
     const t = rparams.config.AlgorithmType;
     flag_remap_init = t == "Default" || t == "SimulationRemap";
     flag_simulate_init = t == "Simulation" || t == "SimulationRemap";
+    flag_edge_detection_init = rparams.config.EdgeDetection;
   }
 
   const [flag_remap, set_flag_remap] = useState(flag_remap_init);
   const [flag_simulation, set_flag_simulation] = useState(flag_simulate_init);
+  const [flag_edge_detection, set_flag_edge_detection] = useState(
+    flag_edge_detection_init
+  );
 
   const get_new_config_type = (
     remap: boolean,
@@ -229,7 +237,8 @@ const ConfigurationView = ({ route, navigation }: Props) => {
     create_new_config(
       get_new_config_type(flag_remap, flag_simulation),
       rparams.dichromacy_type,
-      rparams.config
+      rparams.config,
+      flag_edge_detection
     )
   );
   const [run_dispatch, set_run_dispatch] = useState<
@@ -343,7 +352,8 @@ const ConfigurationView = ({ route, navigation }: Props) => {
               const cfg = create_new_config(
                 get_new_config_type(val, flag_simulation),
                 rparams.dichromacy_type,
-                new_config
+                new_config,
+                flag_edge_detection
               );
               set_new_config(cfg);
 
@@ -408,6 +418,27 @@ const ConfigurationView = ({ route, navigation }: Props) => {
 
         <View style={styles_input.checkbox_container}>
           <Text style={styles_input.checkbox_container_label}>
+            Enable Edge Detection
+          </Text>
+          <Checkbox
+            style={styles_input.checkbox_container_inner}
+            value={flag_edge_detection == 1 ? true : false}
+            onValueChange={(val) => {
+              const val_num = val == true ? 1 : 0;
+              set_flag_edge_detection(val_num);
+              const cfg = create_new_config(
+                get_new_config_type(flag_remap, flag_simulation),
+                rparams.dichromacy_type,
+                new_config,
+                val_num
+              );
+              set_new_config(cfg);
+              updateParams({ EdgeDetection: val_num });
+            }}
+          />
+        </View>
+        <View style={styles_input.checkbox_container}>
+          <Text style={styles_input.checkbox_container_label}>
             Enable Simulation Params
           </Text>
           <Checkbox
@@ -418,7 +449,8 @@ const ConfigurationView = ({ route, navigation }: Props) => {
               const cfg = create_new_config(
                 get_new_config_type(flag_remap, val),
                 rparams.dichromacy_type,
-                new_config
+                new_config,
+                flag_edge_detection
               );
               set_new_config(cfg);
 
@@ -440,7 +472,6 @@ const ConfigurationView = ({ route, navigation }: Props) => {
             }}
           />
         </View>
-
         {flag_simulation && (
           <>
             <View style={styles_input.sliders}>

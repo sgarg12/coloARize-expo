@@ -14,6 +14,7 @@ export type DefaultParams = {
 export type BaseParams = {
   Name: string;
   DichromacyType: DichromacyType;
+  EdgeDetection: number;
 };
 
 export type DefaultConfig = BaseParams &

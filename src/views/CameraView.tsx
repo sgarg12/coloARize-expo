@@ -56,7 +56,7 @@ const CameraView = ({ route, navigation }: Props) => {
     };
 
     initParams(route.params);
-    applyShaders(gl, cameraTexture, setRafID);
+    applyShaders(gl, cameraTexture, 1, setRafID);
   };
 
   const dispatch = useDispatch();
